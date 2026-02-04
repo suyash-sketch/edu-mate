@@ -89,7 +89,7 @@ def main():
         documents=chunks,
         embedding=embedding_model,
         url='http://localhost:6333',
-        collection_name = "edu-mate"
+        collection_name = "edu-mate1"
     )   
 
     print("Indexing of documents done....")

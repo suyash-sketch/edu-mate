@@ -55,13 +55,14 @@ def load_all(pdfs):
     
     return docs
 
-def main():
-    parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')
-    parser.add_argument("inputs", nargs="+", help="PDF files, directories, or glob patterns")
-    agrs = parser.parse_args()
+
+def chunk(doc_path):
+    # parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')
+    # parser.add_argument("inputs", nargs="+", help="PDF files, directories, or glob patterns")
+    # agrs = parser.parse_args()
 
 
-    pdf_paths = find_pdfs(agrs.inputs)
+    pdf_paths = find_pdfs(doc_path)
     if not pdf_paths:
         print("No PDFs found..", file=sys.stderr)
         sys.exit(1)
@@ -94,6 +95,46 @@ def main():
 
     print("Indexing of documents done....")
 
+# def main():
+#     parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')
+#     parser.add_argument("inputs", nargs="+", help="PDF files, directories, or glob patterns")
+#     agrs = parser.parse_args()
 
-if __name__ == "__main__":
-    main()
+
+#     pdf_paths = find_pdfs(agrs.inputs)
+#     if not pdf_paths:
+#         print("No PDFs found..", file=sys.stderr)
+#         sys.exit(1)
+    
+#     docs = load_all(pdf_paths)
+#     print(f"Loaded {len(docs)} documents (pages). Splitting documents into chunks....")
+
+
+#     #Split the docs into smaller chunks
+#     text_splitter = RecursiveCharacterTextSplitter(
+#         chunk_size = 1000,
+#         chunk_overlap = 400
+#     )
+
+#     chunks = text_splitter.split_documents(documents=docs)
+
+
+#     # Vector Embeddings
+#     embedding_model = OllamaEmbeddings(
+#         model='nomic-embed-text',
+#         base_url='http://localhost:11434'
+#     )
+
+#     vector_store = QdrantVectorStore.from_documents(
+#         documents=chunks,
+#         embedding=embedding_model,
+#         url='http://localhost:6333',
+#         collection_name = "edu-mate1"
+#     )   
+
+#     print("Indexing of documents done....")
+
+
+
+# if __name__ == "__main__":
+#     main()

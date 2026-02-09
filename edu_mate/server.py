@@ -12,7 +12,7 @@ def root():
 def chunking(
         doc_path : str = Query(..., description="Enter the document")
 ):
-    job = queue.enqueue('edu_mate.queue.doc_chunking.chunk', doc_path)
+    job = queue.enqueue(chunk, doc_path)
 
     return {"status" : "queued", "job_id" : job.id}
 

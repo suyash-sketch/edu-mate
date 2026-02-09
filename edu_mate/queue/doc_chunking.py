@@ -95,6 +95,13 @@ def chunk(doc_path):
 
     print("Indexing of documents done....")
 
+    return {
+    "stored": True,
+    "chunks": len(chunks),
+    "source": str(pdf_paths[0])
+    }
+
+
 # def main():
 #     parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')
 #     parser.add_argument("inputs", nargs="+", help="PDF files, directories, or glob patterns")

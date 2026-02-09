@@ -96,9 +96,9 @@ def chunk(doc_path):
     print("Indexing of documents done....")
 
     return {
-    "stored": True,
-    "chunks": len(chunks),
-    "source": str(pdf_paths[0])
+        "stored": True,
+        "chunks": len(chunks),
+        "source": str(pdf_paths[0])
     }
 
 

@@ -19,7 +19,7 @@ def chunking(
 
 @app.post('/chat')
 def chat(
-  query : str = Query(..., description="The chat query of user")      
+    query : str = Query(..., description="The chat query of user")
 ):
     job = queue.enqueue(search_and_ask, query)
 

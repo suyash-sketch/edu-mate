@@ -12,10 +12,25 @@ def root():
 def chunking(
         doc_path : str = Query(..., description="Enter the document")
 ):
-    job = queue.enqueue(chunk, doc_path)
+    job = queue.enqueue('edu_mate.queue.doc_chunking.chunk', doc_path)
 
-    return {"status" : "chunked"}
+    return {"status" : "queued", "job_id" : job.id}
 
+
+@app.get('/chunking/status')
+def chunking_status(job_id : str):
+    job = queue.fetch_job(job_id=job_id)
+
+    if job is None:
+        return {"status" : None}
+    
+    if job.is_failed:
+        return {"status" : "failed"}
+    
+    if job.is_finished and job.result.get('stored'):
+        return {"status" : "chunked"}
+    
+    return { "status" : job.get_status()}
 
 @app.post('/chat')
 def chat(

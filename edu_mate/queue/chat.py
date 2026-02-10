@@ -56,7 +56,7 @@ def search_and_ask(user_query:str, top_k = 5):
     SYSTEM_PROMPT = prompt_modelling(context)
 
     # response = ollama_client.chat(
-    #     model='llama3.2:1b',
+    #     model='llama3.2:3b',
     #     messages=[
     #         {
     #             'role':'system',
@@ -70,7 +70,8 @@ def search_and_ask(user_query:str, top_k = 5):
     # )
     
 
-    # print(response.message.content)
+    # print(f'🤖 {response.message.content}')
+    # return response.message.content
 
     response = open_ai_client.chat.completions.create(
         model='gemini-2.5-flash-lite',

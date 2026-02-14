@@ -112,8 +112,6 @@ def search_and_ask(user_query, top_k = 5):
         
     context = "\n\n".join(context_blocks)
         
-    # 2. Get the system prompt from the helper function
-    SYSTEM_PROMPT = prompt_modelling(context)
     
     print(f'\n\n{context}\n\n')
     SYSTEM_PROMPT = prompt_modelling(context)

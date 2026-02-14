@@ -22,13 +22,13 @@ ollama_client = Client(
 
 #vector embeddings
 embedding_model = OllamaEmbeddings(
-    model='nomic-embed-text',
+    model='qwen3-embedding:0.6b',
     base_url='http://localhost:11434',
 )
 
 vector_db = QdrantVectorStore.from_existing_collection(
     url='http://localhost:6333',
-    collection_name='edu-mate1',
+    collection_name='chemistry',
     embedding=embedding_model
 )
 
@@ -46,21 +46,24 @@ requirements = """3 remember, 3 understand, 1 apply, 1 analyze, 1 evaluate, 1 cr
 
 def prompt_modelling(context):
     SYSTEM_PROMPT = f"""
-    You are a helpful AI assistant who gives multiple choice questions with four options based on available context retrieved from a PDF file along with page_contents and page number, The multiple choice questions should be based on the concept of bloom's taxonomy.
-    
-    The blooms taxonomy is a hierarchical classification of different levels of cognitive skills that educators set for students. The levels are: Remembering, Understanding, Applying, Analyzing, Evaluating, and Creating. Each level represents a different type of thinking skill that students can develop.
-    
-    Each multiple choice question should have one correct answer and three distractors. The correct answer should be based on the content of the PDF file and the distractors should be plausible but incorrect answers. The question should be clear and concise, and the answer options should be mutually exclusive and collectively exhaustive.
-    
-    The question should also include an explanation of the correct answer, which should be based on the content of the PDF file.
-    
-    Questions should be according to the following requirements: {requirements}
+        You are a Subject Matter Expert designing a professional, standalone exam. 
+        You have been provided with "Educational Content" and "Admin Metadata" for verification.
 
-    # You should only give the mcqs based on the following context 
-    Context:
-    {context}
+        ### THE RULES FOR YOUR OUTPUT:
+        1. **STRICT BLIND EXAM MODE**: Write the questions as if the student has NO access to any documents. 
+           - DO NOT mention "Page Numbers," "Lessons," "Sections," or "the PDF."
+           - BAD: "According to the provided text on page 4, what is..."
+           - GOOD: "What is the primary characteristic of..."
+        2. **INTERNAL VERIFICATION ONLY**: Use the "Admin Metadata" only to ensure your answer is grounded in the correct chapter. DO NOT repeat this metadata in the question, the options, or the explanation.
+        3. **EXPLANATION FORMAT**: Write the explanation as a factual teaching note. 
+           - BAD: "This is found on page 10 of nodejs.pdf."
+           - GOOD: "Promises are used to handle asynchronous operations more cleanly than callbacks."
+        4. **BLOOM'S TAXONOMY**: {requirements}
+
+        ### PROVIDED DATA (FOR YOUR EYES ONLY):
+        {context}
     """
-    return SYSTEM_PROMPT
+    return SYSTEM_PROMPT  
 
 def search_and_ask(user_query, top_k = 5):
 
@@ -70,10 +73,23 @@ def search_and_ask(user_query, top_k = 5):
         print("No search result from vector DB.")
         return
 
-    context = "\n\n\n".join([f"Page Content: {result.page_content}\nPage Number: {result.metadata['page_label']}\nFile Location: {result.metadata['page_label']}\nFile Location: {result.metadata['source']}" 
-                        for result in search_results])
+    context_blocks = []
+    for result in search_results:
+        block = (
+            f"--- ADMIN METADATA (DO NOT MENTION IN OUTPUT) ---\n"
+            f"Source: {result.metadata['source']}\n"
+            f"Page: {result.metadata['page_label']}\n"
+            f"--- EDUCATIONAL CONTENT ---\n"
+            f"{result.page_content}\n"
+        )
+        context_blocks.append(block)
+        
+    context = "\n\n".join(context_blocks)
+        
+    # 2. Get the system prompt from the helper function
+    SYSTEM_PROMPT = prompt_modelling(context)
     
-
+    print(f'\n\n{context}\n\n')
     SYSTEM_PROMPT = prompt_modelling(context)
 
     # response = ollama_client.chat(

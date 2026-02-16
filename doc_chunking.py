@@ -8,7 +8,11 @@ from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from dotenv import load_dotenv
+from qdrant_client.http.models.models import Vector
 
+load_dotenv()
 
 def find_pdfs(inputs):
     pdfs = []
@@ -70,10 +74,10 @@ def main():
     print(f"Loaded {len(docs)} documents (pages). Splitting documents into chunks....")
 
 
-    #Split the docs into smaller chunks
+    # #Split the docs into smaller chunks
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap = 400
+        chunk_size = 20000,
+        chunk_overlap = 4000
     )
 
     chunks = text_splitter.split_documents(documents=docs)
@@ -81,7 +85,7 @@ def main():
 
     # Vector Embeddings
     embedding_model = OllamaEmbeddings(
-        model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434'
     )
 
@@ -89,11 +93,10 @@ def main():
         documents=chunks,
         embedding=embedding_model,
         url='http://localhost:6333',
-        collection_name = "edu-mate1"
+        collection_name = "chem20k"
     )   
 
     print("Indexing of documents done....")
-
 
 if __name__ == "__main__":
     main() #calling function

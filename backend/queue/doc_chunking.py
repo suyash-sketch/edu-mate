@@ -71,10 +71,10 @@ def chunk(doc_path):
     print(f"Loaded {len(docs)} documents (pages). Splitting documents into chunks....")
 
 
-    #Split the docs into smaller chunks
+    # Split the docs into smaller chunks
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap = 400
+        chunk_size = 20000,
+        chunk_overlap = 4000
     )
 
     chunks = text_splitter.split_documents(documents=docs)
@@ -82,7 +82,7 @@ def chunk(doc_path):
 
     # Vector Embeddings
     embedding_model = OllamaEmbeddings(
-        model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434'
     )
 
@@ -90,10 +90,17 @@ def chunk(doc_path):
         documents=chunks,
         embedding=embedding_model,
         url='http://localhost:6333',
-        collection_name = "edu-mate1"
+        collection_name = "chem20k"
     )   
 
     print("Indexing of documents done....")
+
+    return {
+        "stored": True,
+        "chunks": len(docs),
+        "source": str(pdf_paths[0])
+    }
+
 
 # def main():
 #     parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')

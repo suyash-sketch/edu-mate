@@ -1,12 +1,24 @@
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi import FastAPI, Query
 from .client.rq_client import queue
 from .queue.chat import search_and_ask
 from .queue.doc_chunking import chunk
 app = FastAPI()
 
-@app.get('/')
-def root():
-    return { "status" : "Server is running" }
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+
+app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
+
+# @app.get('/')
+# def root():
+#     return { "status" : "Server is running" }
+
+@app.get("/")
+def serve():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.post('/chunking')
 def chunking(

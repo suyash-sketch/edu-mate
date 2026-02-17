@@ -84,7 +84,7 @@ def chunk(doc_path, collection_name: str):
 
     # Vector Embeddings
     embedding_model = OllamaEmbeddings(
-        model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434'
     )
 
@@ -99,7 +99,7 @@ def chunk(doc_path, collection_name: str):
 
     return {
         "stored": True,
-        "chunks": len(docs),
+        "chunks": len(chunks),
         "source": str(pdf_paths[0]),
         "collection_name": collection_name,
     }

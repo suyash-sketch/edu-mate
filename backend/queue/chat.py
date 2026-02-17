@@ -28,7 +28,7 @@ ollama_client = Client(
 # vector embeddings (must match the model used during chunking/indexing)
 def _embedding_model():
     return OllamaEmbeddings(
-        model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434',
     )
 

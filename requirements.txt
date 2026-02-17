@@ -135,4 +135,4 @@ yarl==1.22.0
 zstandard==0.25.0
 =======
 rq==2.6.1
->>>>>>> e8cc5f81396071be64f001ec2e78448266863fa6
+python-multipart==0.0.22

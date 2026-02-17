@@ -1,48 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edu Mate</title>
-</head>
-<body>
-
-  <h2>Ask Question</h2>
-
-  <input id="query" placeholder="Enter question" />
-  <button onclick="sendQuery()">Send</button>
-
-  <h3>Status:</h3>
-  <div id="status"></div>
-
-  <h3>Result:</h3>
-  <pre id="result"></pre>
-
-  <script>
-    async function sendQuery() {
-      const q = document.getElementById("query").value;
-
-      document.getElementById("status").innerText = "queued";
-
-      const resp = await fetch("/chat?query=" + encodeURIComponent(q), {
-        method: "POST"
-      });
-
-      const data = await resp.json();
-      const job_id = data.job_id;
-
-      const poll = setInterval(async () => {
-        const res = await fetch("/job_status?job_id=" + job_id);
-        const statusData = await res.json();
-
-        document.getElementById("status").innerText = statusData.status;
-
-        if (statusData.status === "finished" || statusData.status === "failed") {
-          clearInterval(poll);
-          document.getElementById("result").innerText =
-            JSON.stringify(statusData.result || statusData.error, null, 2);
-        }
-      }, 1000);
-    }
-  </script>
-
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

@@ -11,6 +11,8 @@ from langchain_qdrant import QdrantVectorStore
 
 
 def find_pdfs(inputs):
+    if isinstance(inputs, (str, Path)):
+        inputs = [str(inputs)]
     pdfs = []
     for s in inputs:
         p = Path(s).expanduser()
@@ -56,7 +58,7 @@ def load_all(pdfs):
     return docs
 
 
-def chunk(doc_path):
+def chunk(doc_path, collection_name: str):
     # parser = argparse.ArgumentParser(description='Simple PDF to Qdrant indexer')
     # parser.add_argument("inputs", nargs="+", help="PDF files, directories, or glob patterns")
     # agrs = parser.parse_args()
@@ -82,7 +84,7 @@ def chunk(doc_path):
 
     # Vector Embeddings
     embedding_model = OllamaEmbeddings(
-        model='qwen3-embedding:0.6b',
+        model='nomic-embed-text',
         base_url='http://localhost:11434'
     )
 
@@ -90,7 +92,7 @@ def chunk(doc_path):
         documents=chunks,
         embedding=embedding_model,
         url='http://localhost:6333',
-        collection_name = "chem20k"
+        collection_name=collection_name,
     )   
 
     print("Indexing of documents done....")
@@ -98,7 +100,8 @@ def chunk(doc_path):
     return {
         "stored": True,
         "chunks": len(docs),
-        "source": str(pdf_paths[0])
+        "source": str(pdf_paths[0]),
+        "collection_name": collection_name,
     }
 
 

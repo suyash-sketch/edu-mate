@@ -25,17 +25,19 @@ ollama_client = Client(
     host='http://localhost:11434'
 )
 
-#vector embeddings
-embedding_model = OllamaEmbeddings(
-    model='qwen3-embedding:0.6b',
-    base_url='http://localhost:11434',
-)
+# vector embeddings (must match the model used during chunking/indexing)
+def _embedding_model():
+    return OllamaEmbeddings(
+        model='nomic-embed-text',
+        base_url='http://localhost:11434',
+    )
 
-vector_db = QdrantVectorStore.from_existing_collection(
-    url='http://localhost:6333',
-    collection_name='chem20k',
-    embedding=embedding_model
-)
+def _vector_db(collection_name: str):
+    return QdrantVectorStore.from_existing_collection(
+        url='http://localhost:6333',
+        collection_name=collection_name,
+        embedding=_embedding_model(),
+    )
 
 class SingleMCQ(BaseModel):
     question_no : str
@@ -91,8 +93,9 @@ def prompt_modelling(context):
     """
     return SYSTEM_PROMPT  
 
-def search_and_ask(user_query, top_k = 5):
+def search_and_ask(user_query, collection_name: str, top_k = 5):
 
+    vector_db = _vector_db(collection_name=collection_name)
     search_results = vector_db.similarity_search(query=user_query, k=top_k)
 
     if not search_results:
@@ -146,7 +149,9 @@ def search_and_ask(user_query, top_k = 5):
     # return response.choices[0].message.content
      
     # print(f'🤖 : {response.choices[0].message.parsed}')
-    return response.choices[0].message.parsed
+    parsed = response.choices[0].message.parsed
+    # Ensure RQ/FastAPI can JSON-serialize result
+    return parsed.model_dump() if hasattr(parsed, "model_dump") else parsed
 
 # if __name__ == "__main__":
 #     q = input("👉 Ask something... ")

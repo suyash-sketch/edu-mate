@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import FileUpload from './components/FileUpload';
 import AssessmentView from './components/AssessmentView';
 import BloomsGuideModal from './components/BloomsGuideModal';
 import AboutPage from './components/AboutPage';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import ForgotPassword from './components/ForgotPassword';
+import PrivateRoute from './components/PrivateRoute';
+import { useAuth } from './context/AuthContext';
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
-  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info,
+  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,6 +38,7 @@ const MOCK_HISTORY = [
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
+  const { logout } = useAuth();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard',     icon: LayoutDashboard },
     { id: 'bank',      label: 'Question Bank', icon: Database },
@@ -54,7 +61,7 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
       </div>
 
       {/* Nav links */}
-      <nav className="px-3 space-y-1 mt-2">
+      <nav className="px-3 space-y-1 mt-2 flex-1">
         {navItems.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -78,6 +85,17 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
           <span>Taxonomy Guide</span>
         </button>
       </nav>
+
+      {/* Logout — pinned to bottom */}
+      <div className="px-3 pb-5 pt-2">
+        <button
+          onClick={logout}
+          className="nav-link w-full text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span>Sign Out</span>
+        </button>
+      </div>
     </aside>
   );
 }
@@ -395,7 +413,7 @@ function SettingsPage() {
 }
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
-function App() {
+function Dashboard() {
   const [appState, setAppState]             = useState('SETUP');
   const [collectionName, setCollectionName] = useState(null);
   const [uploadedFile, setUploadedFile]     = useState(null);
@@ -555,6 +573,26 @@ function App() {
         <BloomsGuideModal onClose={() => setIsGuideOpen(false)} />
       )}
     </div>
+  );
+}
+
+// ─── Root App ───────────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login"           element={<Login />} />
+      <Route path="/signup"          element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Protected routes */}
+      <Route element={<PrivateRoute />}>
+        <Route path="/*" element={<Dashboard />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 

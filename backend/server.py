@@ -1,12 +1,123 @@
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
+import jwt
+from fastapi import FastAPI, File, Query, UploadFile, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi import FastAPI, File, Query, UploadFile
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+
 from .client.rq_client import queue
 from .queue.chat import search_and_ask
 from .queue.doc_chunking import chunk
+
+# --- DATABASE IMPORTS ---
+from .database import engine, get_db
+from . import models, schemas
+
 app = FastAPI()
+
+# Create Postgres tables if they don't exist
+models.Base.metadata.create_all(bind=engine)
+
+# --- SECURITY & JWT CONFIGURATION ---
+SECRET_KEY = "super_secret_edumate_key"  # Keep this safe!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours for normal login
+RESET_TOKEN_EXPIRE_MINUTES = 15     # 15 minutes to reset password
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_token(data: dict, expires_delta: timedelta):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + expires_delta
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# --- AUTHENTICATION ROUTES ---
+
+@app.post("/api/signup", response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    new_user = models.User(name=user.name, email=user.email, password_hash=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.post("/api/login", response_model=schemas.Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    # Generate the JWT Token granting access
+    access_token = create_token(
+        data={"sub": user.email}, 
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/forgot-password")
+def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.email).first()
+    
+    # Security Best Practice: Never reveal if an email exists in your DB to prevent scraping
+    if not user:
+        return {"message": "If the email exists, a reset link has been sent."}
+    
+    # Generate a temporary reset token
+    reset_token = create_token(
+        data={"sub": user.email, "type": "reset"}, 
+        expires_delta=timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    # Because we don't have an email server yet, we will print the link to the terminal!
+    reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
+    print(f"\n\n*** PASSWORD RESET LINK FOR {user.email} ***\n{reset_link}\n\n")
+    
+    return {"message": "If the email exists, a reset link has been sent."}
+
+@app.post("/api/reset-password")
+def reset_password(request: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):
+    try:
+        # Verify the token hasn't expired and wasn't tampered with
+        payload = jwt.decode(request.token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        
+        if email is None or token_type != "reset":
+            raise HTTPException(status_code=400, detail="Invalid token")
+            
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="Invalid token")
+        
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Update the password
+    user.password_hash = get_password_hash(request.new_password)
+    db.commit()
+    return {"message": "Password has been reset successfully"}
+
+
+# --- EXISTING AI ROUTES ---
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
@@ -69,7 +180,6 @@ def chat(
     ),
 ):
     job = queue.enqueue(search_and_ask, query, collection_name, blooms_requirements, job_timeout = 600)
-
     return { "status" : "queued", "job_id" : job.id }
 
 
@@ -93,7 +203,6 @@ def get_result(
 
 # Serve frontend (built React preferred; fallback to legacy HTML)
 if _has_react_build():
-    # Mount AFTER API routes so /chat etc keep working.
     app.mount("/", StaticFiles(directory=FRONTEND_DIST_DIR, html=True), name="frontend")
 else:
     @app.get("/")

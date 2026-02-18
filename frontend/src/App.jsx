@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import AssessmentView from './components/AssessmentView';
+import BloomsGuideModal from './components/BloomsGuideModal';
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
-  Settings, ChevronRight, FileText, Calendar, Hash,
+  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,7 +30,7 @@ const MOCK_HISTORY = [
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
-function Sidebar({ activeNav, setActiveNav, onReset }) {
+function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard',     icon: LayoutDashboard },
     { id: 'bank',      label: 'Question Bank', icon: Database },
@@ -65,6 +66,15 @@ function Sidebar({ activeNav, setActiveNav, onReset }) {
             )}
           </button>
         ))}
+
+        {/* Taxonomy Guide — opens modal */}
+        <button
+          onClick={onOpenGuide}
+          className="nav-link w-full mt-1"
+        >
+          <Lightbulb className="w-4 h-4 flex-shrink-0 text-amber-400" />
+          <span>Taxonomy Guide</span>
+        </button>
       </nav>
     </aside>
   );
@@ -394,6 +404,7 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [activeNav, setActiveNav]           = useState('dashboard');
+  const [isGuideOpen, setIsGuideOpen]       = useState(false);
 
   const totalQuestions = Object.values(bloomsLevels).reduce((a, b) => a + b, 0);
 
@@ -477,7 +488,12 @@ function App() {
     <div className="min-h-screen w-full bg-black text-white font-sans flex">
 
       {/* ── Sidebar ── */}
-      <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} onReset={resetApp} />
+      <Sidebar
+        activeNav={activeNav}
+        setActiveNav={setActiveNav}
+        onReset={resetApp}
+        onOpenGuide={() => setIsGuideOpen(true)}
+      />
 
       {/* ── Main content ── */}
       <main className="ml-[250px] flex-1 min-h-screen overflow-y-auto">
@@ -527,6 +543,11 @@ function App() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* ── Bloom's Guide Modal ── */}
+      {isGuideOpen && (
+        <BloomsGuideModal onClose={() => setIsGuideOpen(false)} />
+      )}
     </div>
   );
 }

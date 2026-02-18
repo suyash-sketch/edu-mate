@@ -38,8 +38,14 @@ export default function Login() {
         throw new Error(data.detail || 'Login failed. Please try again.');
       }
 
-      // Store JWT token and user info in auth context
-      login({ email, token: data.access_token });
+      // Fetch user profile to get the real name from DB
+      const meRes = await fetch('/api/me', {
+        headers: { 'Authorization': `Bearer ${data.access_token}` },
+      });
+      const meData = await meRes.json();
+
+      // Store JWT token + real name in auth context
+      login({ email, name: meData.name || email.split('@')[0], token: data.access_token });
       navigate('/');
     } catch (err) {
       setError(err.message);

@@ -40,15 +40,14 @@ const MOCK_HISTORY = [
 function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
   const { logout } = useAuth();
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard',     icon: LayoutDashboard },
-    { id: 'bank',      label: 'Question Bank', icon: Database },
-    { id: 'history',   label: 'History',       icon: History },
-    { id: 'settings',  label: 'Settings',      icon: Settings },
-    { id: 'about',     label: 'About',         icon: Info },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'history',   label: 'History',   icon: History },
+    { id: 'settings',  label: 'Settings',  icon: Settings },
+    { id: 'about',     label: 'About',     icon: Info },
   ];
 
   return (
-    <aside className="glass fixed left-0 top-0 h-screen w-[250px] flex flex-col z-40 rounded-none border-r border-white/10 border-l-0 border-t-0 border-b-0">
+    <aside className="glass fixed left-0 top-0 h-screen w-[250px] flex flex-col z-40 rounded-none" style={{ borderRight: '1px solid var(--border-glass)', borderLeft: 'none', borderTop: 'none', borderBottom: 'none' }}>
       {/* Logo */}
       <div
         className="flex items-center gap-3 px-5 py-6 cursor-pointer select-none"
@@ -57,7 +56,7 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/50">
           <BookOpen className="w-5 h-5 text-white" />
         </div>
-        <span className="text-white font-bold text-lg tracking-tight">EduMate</span>
+        <span className="font-bold text-lg tracking-tight" style={{ color: 'var(--text-primary)' }}>EduMate</span>
       </div>
 
       {/* Nav links */}
@@ -71,7 +70,7 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
             <Icon className="w-4 h-4 flex-shrink-0" />
             <span>{label}</span>
             {activeNav === id && (
-              <ChevronRight className="w-3.5 h-3.5 ml-auto text-white/40" />
+              <ChevronRight className="w-3.5 h-3.5 ml-auto" style={{ color: 'var(--text-muted)' }} />
             )}
           </button>
         ))}
@@ -107,6 +106,8 @@ function DashboardPage({
   isProcessingFile, handleFileUpload, handleGenerate,
   assessmentData, resetApp, error, loadingMessage,
 }) {
+  const { user } = useAuth();
+  const displayName = user?.name ? `Prof. ${user.name}` : 'Professor';
   return (
     <AnimatePresence mode="wait">
 
@@ -123,7 +124,7 @@ function DashboardPage({
           <div className="mb-8">
             <p className="text-white/40 text-sm font-medium mb-1">Dashboard</p>
             <h1 className="text-3xl font-bold text-white">
-              Welcome back, <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">Professor</span>
+              Welcome back, <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">{displayName}</span>
             </h1>
           </div>
 

@@ -1,31 +1,3 @@
-<<<<<<< HEAD
-aiohappyeyeballs==2.6.1
-aiohttp==3.13.2
-aiosignal==1.4.0
-annotated-doc==0.0.4
-annotated-types==0.7.0
-anyio==4.12.0
-asttokens==3.0.1
-attrs==25.4.0
-audioop-lts==0.2.2; python_version >= "3.13"
-backoff==2.2.1
-bottleneck==1.6.0
-cachetools==6.2.4
-certifi==2025.11.12
-charset-normalizer==3.4.4
-click==8.3.1
-comm==0.2.3
-croniter==6.0.0
-dataclasses-json==0.6.7
-debugpy==1.8.19
-decorator==5.2.1
-distro==1.9.0
-dnspython==2.8.0
-docstring-parser==0.17.0
-email-validator==2.3.0
-executing==2.2.1
-=======
->>>>>>> e8cc5f81396071be64f001ec2e78448266863fa6
 fastapi==0.124.4
 fastapi-cli==0.0.16
 fastapi-cloud-cli==0.6.0
@@ -40,61 +12,17 @@ langchain-google-vertexai==3.2.0
 langchain-ollama==1.0.1
 langchain-qdrant==1.1.0
 langchain-text-splitters==1.1.0
-<<<<<<< HEAD
-langgraph==1.0.5
-langgraph-checkpoint==3.0.1
-langgraph-checkpoint-mongodb==0.3.0
-langgraph-prebuilt==1.0.5
-langgraph-sdk==0.3.1
-langsmith==0.5.1
-lark==1.3.1
-markdown-it-py==4.0.0
-markupsafe==3.0.3
-marshmallow==3.26.1
-matplotlib-inline==0.2.1
-mdurl==0.1.2
-multidict==6.7.0
-mypy-extensions==1.1.0
-neo4j==5.28.2
-neo4j-graphrag==1.11.0
-nest-asyncio==1.6.0
-numexpr==2.14.1
-numpy==2.4.0
-ollama==0.6.1
-openai==2.11.0
-orjson==3.11.5
-ormsgpack==1.12.1
-packaging==25.0
-parso==0.8.5
-pexpect==4.9.0
-platformdirs==4.5.1
-portalocker==3.2.0
-posthog==7.4.2
-prompt-toolkit==3.0.52
-propcache==0.4.1
-proto-plus==1.27.0
-protobuf>=6.31.1,<7.0.0
-psutil==7.1.3
-ptyprocess==0.7.0
-pure-eval==0.2.3
-pyarrow==22.0.0
-pyasn1==0.6.1
-pyasn1-modules==0.4.2
-pyaudio==0.2.14
-=======
 # langgraph==1.0.5
 # langgraph-checkpoint==3.0.1
 # langgraph-checkpoint-mongodb==0.3.0
 numpy==2.4.0
 ollama==0.6.1
 openai==2.11
->>>>>>> e8cc5f81396071be64f001ec2e78448266863fa6
 pydantic==2.12.5
 # pymongo==4.15.5
 pypdf==6.4.2
 qdrant-client==1.16.2
 redis==7.1.0
-<<<<<<< HEAD
 requests==2.32.5
 requests-toolbelt==1.0.0
 rich==14.2.0
@@ -133,6 +61,5 @@ websockets==15.0.1
 xxhash==3.6.0
 yarl==1.22.0
 zstandard==0.25.0
-=======
 rq==2.6.1
 python-multipart==0.0.22

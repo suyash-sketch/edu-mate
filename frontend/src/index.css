@@ -2,33 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
+  color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  background-color: #000000;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #000000;
 }
 
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
 @layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+
+  /* ── Glass card ────────────────────────────────────────────────────── */
+  .glass {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
   }
 
+  /* ── Glass card with slightly more opacity for inner cards ─────────── */
+  .glass-inner {
+    @apply backdrop-blur-md bg-white/[0.07] border border-white/10 rounded-xl;
+  }
+
+  /* ── Primary gradient button ───────────────────────────────────────── */
+  .btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600
+           hover:from-violet-500 hover:to-indigo-500
+           text-white rounded-xl font-semibold
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-black
+           disabled:opacity-40 disabled:cursor-not-allowed
+           shadow-lg shadow-violet-900/40;
+  }
+
+  /* ── Sidebar nav link ──────────────────────────────────────────────── */
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-white/50 hover:text-white hover:bg-white/[0.08]
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .nav-link.active {
+    @apply text-white bg-white/10;
+  }
+
+  /* ── Glass input ───────────────────────────────────────────────────── */
+  .glass-input {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-white/5 border border-white/10
+           text-white placeholder-white/30
+           focus:outline-none focus:ring-2 focus:ring-violet-500/60 focus:border-violet-500/60
+           transition-all duration-200 text-sm;
+  }
+
+  /* ── Assessment card (results) ─────────────────────────────────────── */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6;
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6;
   }
 }

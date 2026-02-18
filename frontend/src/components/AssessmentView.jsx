@@ -10,14 +10,14 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 
-// ─── Bloom's badge styles (website only) ─────────────────────────────────────
+// ─── Bloom's badge styles (website only — dark glass theme) ──────────────────
 const BLOOMS_BADGE_STYLES = {
-    remember:   { label: 'Remember',   classes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
-    understand: { label: 'Understand', classes: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800' },
-    apply:      { label: 'Apply',      classes: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800' },
-    analyze:    { label: 'Analyze',    classes: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
-    evaluate:   { label: 'Evaluate',   classes: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
-    create:     { label: 'Create',     classes: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 border-pink-200 dark:border-pink-800' },
+    remember:   { label: 'Remember',   classes: 'bg-blue-500/10 text-blue-300 border-blue-500/20' },
+    understand: { label: 'Understand', classes: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20' },
+    apply:      { label: 'Apply',      classes: 'bg-green-500/10 text-green-300 border-green-500/20' },
+    analyze:    { label: 'Analyze',    classes: 'bg-purple-500/10 text-purple-300 border-purple-500/20' },
+    evaluate:   { label: 'Evaluate',   classes: 'bg-orange-500/10 text-orange-300 border-orange-500/20' },
+    create:     { label: 'Create',     classes: 'bg-pink-500/10 text-pink-300 border-pink-500/20' },
 };
 
 // ─── Shared colour constants (in hex without #, for docx) ────────────────────
@@ -305,38 +305,38 @@ const AssessmentView = ({ assessmentData }) => {
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto p-4 pb-20">
+        <div className="w-full pb-20">
 
             {/* ── Sticky header ── */}
-            <div className="sticky top-4 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-2 mb-8 flex justify-between items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-bold ml-4 text-gray-800 dark:text-gray-100 hidden sm:block">
+            <div className="sticky top-0 z-20 backdrop-blur-xl bg-black/60 border-b border-white/[0.08] px-2 py-3 mb-8 flex justify-between items-center gap-2 flex-wrap rounded-2xl">
+                <h2 className="text-base font-semibold text-white/80 ml-2 hidden sm:block">
                     Assessment Result
                 </h2>
 
                 {/* View toggle */}
-                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+                <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
                     <button
                         onClick={() => setViewMode('question')}
                         className={clsx(
-                            'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                             viewMode === 'question'
-                                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                ? 'bg-violet-600/80 text-white shadow-sm'
+                                : 'text-white/40 hover:text-white/70'
                         )}
                     >
-                        <FileText size={16} />
+                        <FileText size={15} />
                         <span>Question Paper</span>
                     </button>
                     <button
                         onClick={() => setViewMode('answer')}
                         className={clsx(
-                            'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                             viewMode === 'answer'
-                                ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                ? 'bg-emerald-600/80 text-white shadow-sm'
+                                : 'text-white/40 hover:text-white/70'
                         )}
                     >
-                        <Key size={16} />
+                        <Key size={15} />
                         <span>Answer Key</span>
                     </button>
                 </div>
@@ -346,7 +346,7 @@ const AssessmentView = ({ assessmentData }) => {
                     <button
                         onClick={() => handleDownload(downloadQuestionDocx)}
                         disabled={downloading}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold shadow-md shadow-indigo-500/30 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-sm font-semibold shadow-lg shadow-violet-900/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Download size={15} />
                         {downloading ? 'Generating…' : 'Download Questions (.docx)'}
@@ -355,7 +355,7 @@ const AssessmentView = ({ assessmentData }) => {
                     <button
                         onClick={() => handleDownload(downloadAnswerKeyDocx)}
                         disabled={downloading}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-semibold shadow-md shadow-emerald-500/30 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-semibold shadow-lg shadow-emerald-900/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Download size={15} />
                         {downloading ? 'Generating…' : 'Download Answer Key (.docx)'}
@@ -364,19 +364,19 @@ const AssessmentView = ({ assessmentData }) => {
             </div>
 
             {/* ── Questions list ── */}
-            <motion.div layout className="space-y-6">
+            <motion.div layout className="space-y-5">
                 {mcqs.map((mcq, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="card hover:shadow-xl transition-shadow duration-300 border-l-4 border-l-transparent hover:border-l-indigo-500"
+                        transition={{ delay: index * 0.04 }}
+                        className="glass p-6 hover:border-violet-500/30 transition-all duration-300"
                     >
                         {/* Question header */}
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">
+                                <span className="text-xs font-bold text-white/30 uppercase tracking-widest">
                                     Question {mcq.question_no || index + 1}
                                 </span>
                                 {/* Bloom's badge — website only, never in Word docs */}
@@ -392,7 +392,7 @@ const AssessmentView = ({ assessmentData }) => {
                                             {badge.label}
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600">
+                                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-white/5 text-white/50 border-white/10">
                                             <Brain className="w-3 h-3" />
                                             {mcq.bloom_level}
                                         </span>
@@ -400,17 +400,17 @@ const AssessmentView = ({ assessmentData }) => {
                                 })()}
                             </div>
                             {viewMode === 'answer' && (
-                                <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md font-mono">
+                                <span className="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md font-mono">
                                     Correct: {mcq.correct_answer}
                                 </span>
                             )}
                         </div>
 
-                        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-6 leading-relaxed">
+                        <h3 className="text-base font-medium text-white/90 mb-5 leading-relaxed">
                             {mcq.question}
                         </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                             {mcq.answer_options.map((option, optIndex) => {
                                 const isAnswerMode = viewMode === 'answer';
                                 const isCorrect = isAnswerMode && (
@@ -422,22 +422,22 @@ const AssessmentView = ({ assessmentData }) => {
                                     <div
                                         key={optIndex}
                                         className={clsx(
-                                            'p-3 rounded-lg border text-sm transition-all duration-200 flex items-center',
+                                            'p-3 rounded-xl border text-sm transition-all duration-200 flex items-center gap-3',
                                             isCorrect
-                                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 font-medium'
-                                                : 'bg-gray-50 border-gray-100 text-gray-600 dark:bg-gray-700/50 dark:border-gray-700 dark:text-gray-300'
+                                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-medium'
+                                                : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06]'
                                         )}
                                     >
                                         <div className={clsx(
-                                            'w-6 h-6 rounded-full flex items-center justify-center mr-3 text-xs border flex-shrink-0',
+                                            'w-6 h-6 rounded-full flex items-center justify-center text-xs border flex-shrink-0 font-semibold',
                                             isCorrect
                                                 ? 'bg-emerald-500 border-emerald-500 text-white'
-                                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500'
+                                                : 'bg-white/5 border-white/15 text-white/40'
                                         )}>
                                             {String.fromCharCode(65 + optIndex)}
                                         </div>
-                                        {option}
-                                        {isCorrect && <Check className="ml-auto w-4 h-4 text-emerald-600 flex-shrink-0" />}
+                                        <span className="flex-1">{option}</span>
+                                        {isCorrect && <Check className="ml-auto w-4 h-4 text-emerald-400 flex-shrink-0" />}
                                     </div>
                                 );
                             })}
@@ -445,10 +445,10 @@ const AssessmentView = ({ assessmentData }) => {
 
                         {/* Explanation — answer mode only, website only */}
                         {viewMode === 'answer' && mcq.explaination && (
-                            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <div className="mt-5 pt-4 border-t border-white/[0.08]">
                                 <button
                                     onClick={() => toggleExplanation(index)}
-                                    className="flex items-center text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none"
+                                    className="flex items-center text-sm text-violet-400 font-medium hover:text-violet-300 transition-colors focus:outline-none"
                                 >
                                     {expandedExplanations[index]
                                         ? <><ChevronUp className="w-4 h-4 mr-1" /> Hide Explanation</>
@@ -461,8 +461,8 @@ const AssessmentView = ({ assessmentData }) => {
                                     transition={{ duration: 0.3 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="pt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-lg mt-2">
-                                        <span className="font-semibold text-indigo-700 dark:text-indigo-300">Explanation: </span>
+                                    <div className="pt-2 text-sm text-white/50 leading-relaxed bg-violet-500/5 border border-violet-500/10 p-3 rounded-xl mt-2">
+                                        <span className="font-semibold text-violet-300">Explanation: </span>
                                         {mcq.explaination}
                                     </div>
                                 </motion.div>

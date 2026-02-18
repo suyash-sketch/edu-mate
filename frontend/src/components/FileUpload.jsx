@@ -1,28 +1,25 @@
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, Loader2, X, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const FileUpload = ({ onFileUpload, compact = false }) => {
+const FileUpload = ({ onFileUpload, externalFile }) => {
     const [dragActive, setDragActive] = useState(false);
-    const [file, setFile] = useState(null);
+    const [internalFile, setInternalFile] = useState(null);
     const [error, setError] = useState(null);
     const [uploading, setUploading] = useState(false);
+
+    // Use externalFile (App-level state) if available, else fall back to internal
+    const file = externalFile ?? internalFile;
 
     const handleDrag = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
-            setDragActive(false);
-        }
+        if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+        else if (e.type === 'dragleave') setDragActive(false);
     };
 
-    const validateFile = (file) => {
-        if (file.type !== 'application/pdf') {
-            setError('Only PDF files are allowed');
-            return false;
-        }
+    const validateFile = (f) => {
+        if (f.type !== 'application/pdf') { setError('Only PDF files are allowed'); return false; }
         setError(null);
         return true;
     };
@@ -31,201 +28,100 @@ const FileUpload = ({ onFileUpload, compact = false }) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const droppedFile = e.dataTransfer.files[0];
-            if (validateFile(droppedFile)) {
-                setFile(droppedFile);
-                handleUpload(droppedFile);
-            }
+        if (e.dataTransfer.files?.[0]) {
+            const f = e.dataTransfer.files[0];
+            if (validateFile(f)) { setInternalFile(f); handleUpload(f); }
         }
     };
 
     const handleChange = (e) => {
         e.preventDefault();
-        if (e.target.files && e.target.files[0]) {
-            const selectedFile = e.target.files[0];
-            if (validateFile(selectedFile)) {
-                setFile(selectedFile);
-                handleUpload(selectedFile);
-            }
+        if (e.target.files?.[0]) {
+            const f = e.target.files[0];
+            if (validateFile(f)) { setInternalFile(f); handleUpload(f); }
         }
     };
 
     const handleUpload = async (selectedFile) => {
         setUploading(true);
-        try {
-            await onFileUpload(selectedFile);
-        } catch (err) {
-            setError('Upload failed. Please try again.');
-            setFile(null);
-        } finally {
-            setUploading(false);
-        }
+        try { await onFileUpload(selectedFile); }
+        catch { setError('Upload failed. Please try again.'); setInternalFile(null); }
+        finally { setUploading(false); }
     };
 
     const clearFile = (e) => {
         e.stopPropagation();
         e.preventDefault();
-        setFile(null);
+        setInternalFile(null);
         setError(null);
-        // We might want a callback to clear parent state too, but for now this clears the local UI.
-        // In a real app, we'd pass a onClear prop.
     };
 
-    // Compact View (Button style)
-    if (compact) {
-        return (
-            <div className="w-full">
-                <form
-                    className={`relative w-full transition-all duration-300 ease-in-out
-                    ${dragActive ? 'scale-[1.02]' : ''}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                >
-                    <input
-                        type="file"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        onChange={handleChange}
-                        accept=".pdf"
-                        disabled={uploading}
-                    />
-
-                    <div className={`
-                        flex items-center justify-between p-4 rounded-xl border-2 border-dashed
-                        ${error
-                            ? 'border-red-300 bg-red-50 text-red-600'
-                            : file
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-400 text-indigo-700'
-                        }
-                        transition-colors
-                    `}>
-                        <div className="flex items-center space-x-3 overflow-hidden">
-                            {uploading ? (
-                                <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
-                            ) : file ? (
-                                <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                            ) : (
-                                <Upload className="w-5 h-5 flex-shrink-0" />
-                            )}
-
-                            <span className="font-medium truncate text-sm">
-                                {uploading
-                                    ? "Uploading..."
-                                    : file
-                                        ? file.name
-                                        : "Upload PDF Material"
-                                }
-                            </span>
-                        </div>
-
-                        {!uploading && !file && (
-                            <span className="text-xs opacity-60 ml-2 hidden sm:inline-block">Drag & drop or Click</span>
-                        )}
-
-                        {file && !uploading && (
-                            <button
-                                onClick={clearFile}
-                                className="z-20 p-1 hover:bg-black/10 rounded-full transition-colors"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                </form>
-                {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
-            </div>
-        )
-    }
-
-    // Default Large View
     return (
-        <div className="w-full max-w-xl mx-auto p-4">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-8"
-            >
-                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 mb-2">
-                    Upload Material
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400">
-                    Upload your PDF to generate an assessment
-                </p>
-            </motion.div>
+        <form
+            className={`relative w-full transition-all duration-300 ease-in-out ${dragActive ? 'scale-[1.01]' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+        >
+            <input
+                type="file"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                onChange={handleChange}
+                accept=".pdf"
+                disabled={uploading}
+            />
 
-            <form
-                className={`relative w-full h-64 border-2 border-dashed rounded-2xl transition-all duration-300 ease-in-out flex flex-col items-center justify-center p-6
-          ${dragActive
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.02]'
-                        : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-indigo-400'
-                    }
-          ${error ? 'border-red-400 bg-red-50 dark:bg-red-900/10' : ''}
-        `}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
-                <input
-                    type="file"
-                    id="file-upload"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    onChange={handleChange}
-                    accept=".pdf"
-                    disabled={uploading}
-                />
-
+            <div className={`
+                flex flex-col items-center justify-center gap-3 p-8 rounded-2xl border-2 border-dashed
+                transition-all duration-300 min-h-[140px]
+                ${error
+                    ? 'border-red-500/40 bg-red-500/5 text-red-400'
+                    : file
+                        ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-400'
+                        : dragActive
+                            ? 'border-violet-500/60 bg-violet-500/10 text-violet-300'
+                            : 'border-white/10 bg-white/[0.03] hover:border-violet-500/40 hover:bg-violet-500/5 text-white/40'
+                }
+            `}>
                 <AnimatePresence mode="wait">
                     {uploading ? (
-                        <motion.div
-                            key="uploading"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="flex flex-col items-center"
-                        >
-                            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-                            <p className="text-lg font-medium text-gray-700 dark:text-gray-200">Processing PDF...</p>
-                            <p className="text-sm text-gray-500">This might take a moment (Chunking & Indexing)</p>
+                        <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="flex flex-col items-center gap-2">
+                            <Loader2 className="w-10 h-10 animate-spin text-violet-400" />
+                            <p className="text-sm font-medium text-white/60">Uploading & processing PDF…</p>
                         </motion.div>
                     ) : file ? (
-                        <motion.div
-                            key="file-selected"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="flex flex-col items-center"
-                        >
-                            <CheckCircle className="w-16 h-16 text-emerald-500 mb-4" />
-                            <p className="text-lg font-medium text-gray-800 dark:text-white truncate max-w-xs">{file.name}</p>
-                            <p className="text-sm text-emerald-600 mt-1">Ready for assessment generation</p>
+                        <motion.div key="file" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                            className="flex flex-col items-center gap-2 w-full">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                <FileText className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <p className="text-sm font-semibold text-emerald-300 truncate max-w-[260px]">{file.name}</p>
+                            <p className="text-xs text-white/40">{(file.size / 1024 / 1024).toFixed(2)} MB · PDF Document uploaded</p>
+                            <button
+                                onClick={clearFile}
+                                className="z-20 mt-1 flex items-center gap-1 text-xs text-white/40 hover:text-red-400 transition-colors"
+                            >
+                                <X className="w-3 h-3" /> Remove
+                            </button>
                         </motion.div>
                     ) : (
-                        <motion.div
-                            key="idle"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center pointer-events-none"
-                        >
-                            <div className={`p-4 rounded-full mb-4 ${error ? 'bg-red-100 text-red-500' : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30'}`}>
-                                {error ? <AlertCircle className="w-8 h-8" /> : <Upload className="w-8 h-8" />}
+                        <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="flex flex-col items-center gap-2 pointer-events-none">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${error ? 'bg-red-500/20' : 'bg-white/5'}`}>
+                                {error ? <AlertCircle className="w-6 h-6 text-red-400" /> : <Upload className="w-6 h-6 text-white/40" />}
                             </div>
-                            <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
-                                {error ? error : "Click to upload or drag and drop"}
+                            <p className="text-sm font-medium text-white/60">
+                                {error || 'Drag & drop or click to upload'}
                             </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                                PDF (MAX. 10MB)
-                            </p>
+                            <p className="text-xs text-white/30">PDF only · Max 10 MB</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </form>
-        </div>
+            </div>
+            {error && <p className="text-xs text-red-400 mt-1.5 ml-1">{error}</p>}
+        </form>
     );
 };
 

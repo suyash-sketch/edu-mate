@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import AssessmentView from './components/AssessmentView';
 import BloomsGuideModal from './components/BloomsGuideModal';
+import AboutPage from './components/AboutPage';
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
-  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb,
+  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,6 +37,7 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
     { id: 'bank',      label: 'Question Bank', icon: Database },
     { id: 'history',   label: 'History',       icon: History },
     { id: 'settings',  label: 'Settings',      icon: Settings },
+    { id: 'about',     label: 'About',         icon: Info },
   ];
 
   return (
@@ -538,6 +540,10 @@ function App() {
 
             {activeNav === 'settings' && (
               <SettingsPage key="settings-page" />
+            )}
+
+            {activeNav === 'about' && (
+              <AboutPage key="about-page" />
             )}
 
           </AnimatePresence>

@@ -2,17 +2,44 @@ import React, { useState, useEffect } from 'react';
 import FileUpload from './components/FileUpload';
 import AssessmentView from './components/AssessmentView';
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
-import { Loader2, Sparkles, BookOpen, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, BookOpen, AlertTriangle, ArrowRight, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const BLOOMS_LEVELS = [
+  { key: 'remember',   label: 'Remember',   color: 'from-blue-500 to-blue-600',     badge: 'bg-blue-400',   ring: 'ring-blue-400' },
+  { key: 'understand', label: 'Understand', color: 'from-cyan-400 to-cyan-500',      badge: 'bg-cyan-300',   ring: 'ring-cyan-400' },
+  { key: 'apply',      label: 'Apply',      color: 'from-green-500 to-green-600',    badge: 'bg-green-400',  ring: 'ring-green-400' },
+  { key: 'analyze',    label: 'Analyze',    color: 'from-purple-500 to-purple-600',  badge: 'bg-purple-400', ring: 'ring-purple-400' },
+  { key: 'evaluate',   label: 'Evaluate',   color: 'from-orange-500 to-orange-600',  badge: 'bg-orange-400', ring: 'ring-orange-400' },
+  { key: 'create',     label: 'Create',     color: 'from-pink-500 to-pink-600',      badge: 'bg-pink-400',   ring: 'ring-pink-400' },
+];
+
+const DEFAULT_BLOOMS = { remember: 5, understand: 3, apply: 4, analyze: 3, evaluate: 2, create: 3 };
 
 function App() {
   const [appState, setAppState] = useState('SETUP'); // SETUP, GENERATING, RESULTS, ERROR
   const [collectionName, setCollectionName] = useState(null);
-  const [userQuery, setUserQuery] = useState('');
+  const [chapterName, setChapterName] = useState('');
+  const [bloomsLevels, setBloomsLevels] = useState(DEFAULT_BLOOMS);
   const [assessmentData, setAssessmentData] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+
+  const totalQuestions = Object.values(bloomsLevels).reduce((a, b) => a + b, 0);
+
+  const adjustLevel = (key, delta) => {
+    setBloomsLevels(prev => ({
+      ...prev,
+      [key]: Math.max(0, prev[key] + delta),
+    }));
+  };
+
+  const buildBloomsRequirements = () =>
+    BLOOMS_LEVELS
+      .filter(l => bloomsLevels[l.key] > 0)
+      .map(l => `${bloomsLevels[l.key]} ${l.key}`)
+      .join(', ');
 
   const handleFileUpload = async (file) => {
     try {
@@ -56,12 +83,14 @@ function App() {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    if (!userQuery.trim() || !collectionName || isProcessingFile) return;
+    if (!chapterName.trim() || !collectionName || isProcessingFile || totalQuestions === 0) return;
 
     try {
       setAppState('GENERATING');
       setLoadingMessage('Crafting your assessment with AI...');
-      const response = await generateAssessment(userQuery, collectionName);
+      const bloomsRequirements = buildBloomsRequirements();
+      const query = chapterName.trim();
+      const response = await generateAssessment(query, collectionName, bloomsRequirements);
 
       if (response.status === 'queued') {
         pollGeneration(response.job_id);
@@ -104,7 +133,8 @@ function App() {
   const resetApp = () => {
     setAppState('SETUP');
     setCollectionName(null);
-    setUserQuery('');
+    setChapterName('');
+    setBloomsLevels(DEFAULT_BLOOMS);
     setAssessmentData(null);
     setError(null);
     setIsProcessingFile(false);
@@ -170,23 +200,62 @@ function App() {
                   )}
                 </div>
 
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                      Step 2: Bloom's Taxonomy Factors
+                    </label>
+                    <span className="text-xs font-medium text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-full">
+                      Total: {totalQuestions} questions
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {BLOOMS_LEVELS.map(level => (
+                      <div
+                        key={level.key}
+                        className={`flex items-center gap-0 rounded-xl bg-gradient-to-r ${level.color} shadow-md overflow-hidden`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => adjustLevel(level.key, -1)}
+                          className="px-2 py-2.5 text-white/80 hover:text-white hover:bg-black/20 transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-white font-semibold text-sm px-1 select-none">
+                          {level.label}
+                        </span>
+                        <div className="mx-2 min-w-[28px] h-7 bg-white/25 rounded-lg flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">{bloomsLevels[level.key]}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => adjustLevel(level.key, 1)}
+                          className="px-2 py-2.5 text-white/80 hover:text-white hover:bg-black/20 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="mb-8">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
-                    Step 2: Assessment Details
+                    Step 3: Chapter / Module Name
                   </label>
-                  <div className="relative">
-                    <textarea
-                      value={userQuery}
-                      onChange={(e) => setUserQuery(e.target.value)}
-                      placeholder="E.g., Generate 10 multiple choice questions on Chapter 3 with a mix of difficulty levels."
-                      className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-base min-h-[120px] resize-none"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={chapterName}
+                    onChange={(e) => setChapterName(e.target.value)}
+                    placeholder="E.g., Asynchronous Node.js"
+                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-base"
+                  />
                 </div>
 
                 <button
                   onClick={handleGenerate}
-                  disabled={!userQuery.trim() || !collectionName || isProcessingFile}
+                  disabled={!chapterName.trim() || !collectionName || isProcessingFile || totalQuestions === 0}
                   className="w-full btn-primary py-4 text-lg font-semibold shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.99] transition-all"
                 >
                   {appState === 'GENERATING' ? (
@@ -199,7 +268,9 @@ function App() {
                       ? "Waiting for file processing..."
                       : !collectionName
                         ? "Upload a file to start"
-                        : "Generate Assessment"
+                        : totalQuestions === 0
+                          ? "Set at least 1 question"
+                          : "Generate AI Assessment"
                     }
                   </span>
                 </button>

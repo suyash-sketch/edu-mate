@@ -28,7 +28,7 @@ ollama_client = Client(
 # vector embeddings (must match the model used during chunking/indexing)
 def _embedding_model():
     return OllamaEmbeddings(
-        model='qwen3-embedding:0.6b',
+        model='nomic-embed-text',
         base_url='http://localhost:11434',
     )
 
@@ -41,6 +41,7 @@ def _vector_db(collection_name: str):
 
 class SingleMCQ(BaseModel):
     question_no : str
+    bloom_level : str  # e.g. "remember", "understand", "apply", "analyze", "evaluate", "create"
     question : str
     answer_options : List[str]
     correct_answer : str
@@ -50,8 +51,7 @@ class OutputFormat(BaseModel):
     mcqs : List[SingleMCQ]
     
     
-requirements = """3 remember, 3 understand, 1 apply, 1 analyze, 1 evaluate, 1 create"""
-    
+
 # def prompt_modelling(context):
     
 #     SYSTEM_PROMPT = f"""
@@ -72,7 +72,7 @@ requirements = """3 remember, 3 understand, 1 apply, 1 analyze, 1 evaluate, 1 cr
 
 #     return SYSTEM_PROMPT
 
-def prompt_modelling(context):
+def prompt_modelling(context, blooms_requirements: str):
     SYSTEM_PROMPT = f"""
         You are a Subject Matter Expert designing a professional, standalone exam. 
         You have been provided with "Educational Content" and "Admin Metadata" for verification.
@@ -86,14 +86,15 @@ def prompt_modelling(context):
         3. **EXPLANATION FORMAT**: Write the explanation as a factual teaching note. 
            - BAD: "This is found on page 10 of nodejs.pdf."
            - GOOD: "Promises are used to handle asynchronous operations more cleanly than callbacks."
-        4. **BLOOM'S TAXONOMY**: {requirements}
+        4. **BLOOM'S TAXONOMY**: Generate questions according to these counts: {blooms_requirements}.
+           For each question, set the `bloom_level` field to exactly one of: remember, understand, apply, analyze, evaluate, create — matching the cognitive level of that question.
 
         ### PROVIDED DATA (FOR YOUR EYES ONLY):
         {context}
     """
     return SYSTEM_PROMPT  
 
-def search_and_ask(user_query, collection_name: str, top_k = 5):
+def search_and_ask(user_query, collection_name: str, blooms_requirements: str = "5 remember, 3 understand, 4 apply, 3 analyze, 2 evaluate, 3 create", top_k = 5):
 
     vector_db = _vector_db(collection_name=collection_name)
     search_results = vector_db.similarity_search(query=user_query, k=top_k)
@@ -117,7 +118,7 @@ def search_and_ask(user_query, collection_name: str, top_k = 5):
         
     
     print(f'\n\n{context}\n\n')
-    SYSTEM_PROMPT = prompt_modelling(context)
+    SYSTEM_PROMPT = prompt_modelling(context, blooms_requirements)
 
     # response = ollama_client.chat(
     #     model='llama3.2:1b',

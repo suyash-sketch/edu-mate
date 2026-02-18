@@ -34,7 +34,7 @@ def chunking(
         with open(save_path, "wb") as f:
             f.write(file.file.read())
 
-        job = queue.enqueue(chunk, [save_path], collection_name)
+        job = queue.enqueue(chunk, [save_path], collection_name, job_timeout = 600)
         return {"status": "queued", "job_id": job.id, "collection_name": collection_name}
 
     if doc_path:
@@ -63,8 +63,12 @@ def chunking_status(job_id : str):
 def chat(
     query : str = Query(..., description="The chat query of user"),
     collection_name: str = Query(..., description="Qdrant collection name to search"),
+    blooms_requirements: str = Query(
+        "5 remember, 3 understand, 4 apply, 3 analyze, 2 evaluate, 3 create",
+        description="Bloom's taxonomy requirements string"
+    ),
 ):
-    job = queue.enqueue(search_and_ask, query, collection_name)
+    job = queue.enqueue(search_and_ask, query, collection_name, blooms_requirements, job_timeout = 600)
 
     return { "status" : "queued", "job_id" : job.id }
 

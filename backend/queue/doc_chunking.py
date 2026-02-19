@@ -75,8 +75,8 @@ def chunk(doc_path, collection_name: str):
 
     # Split the docs into smaller chunks
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap = 400
+        chunk_size = 15000,
+        chunk_overlap = 3000
     )
 
     chunks = text_splitter.split_documents(documents=docs)
@@ -84,7 +84,8 @@ def chunk(doc_path, collection_name: str):
 
     # Vector Embeddings
     embedding_model = OllamaEmbeddings(
-        model='nomic-embed-text',
+        # model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434'
     )
 

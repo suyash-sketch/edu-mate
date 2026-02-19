@@ -1,13 +1,14 @@
 import os
 import uuid
+import hashlib
 from datetime import datetime, timedelta, timezone
 import jwt
+import bcrypt
 from fastapi import FastAPI, File, Query, UploadFile, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 
 from .client.rq_client import queue
 from .queue.chat import search_and_ask
@@ -28,14 +29,38 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours for normal login
 RESET_TOKEN_EXPIRE_MINUTES = 15     # 15 minutes to reset password
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def get_password_hash(password: str) -> str:
+    """
+    Hash a password using bcrypt.
+    Bcrypt has a 72-byte limit, so we hash longer passwords first using SHA256.
+    """
+    # Convert password to bytes
+    password_bytes = password.encode('utf-8')
+    
+    # Bcrypt has a 72-byte limit, so if password is longer, hash it first
+    if len(password_bytes) > 72:
+        password_bytes = hashlib.sha256(password_bytes).digest()
+    
+    # Generate salt and hash password
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Verify a password against a bcrypt hash.
+    """
+    # Convert password to bytes
+    password_bytes = plain_password.encode('utf-8')
+    
+    # If password is longer than 72 bytes, hash it first (same as in get_password_hash)
+    if len(password_bytes) > 72:
+        password_bytes = hashlib.sha256(password_bytes).digest()
+    
+    # Verify password
+    return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 
 def create_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()

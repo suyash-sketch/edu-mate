@@ -20,11 +20,12 @@ export const pollChunkingStatus = async (jobId) => {
     return response.data;
 };
 
-export const generateAssessment = async (query, collectionName) => {
+export const generateAssessment = async (query, collectionName, bloomsRequirements) => {
     const response = await axios.post(`${API_BASE_URL}/chat`, null, {
         params: {
             query: query,
             collection_name: collectionName,
+            blooms_requirements: bloomsRequirements,
         },
     });
     return response.data;

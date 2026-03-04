@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('edu_theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('edu_theme') || 'light');
 
   useEffect(() => {
     const root = document.documentElement;

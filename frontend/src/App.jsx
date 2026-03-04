@@ -9,11 +9,12 @@ import Signup from './components/Signup';
 import ForgotPassword from './components/ForgotPassword';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
-  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut,
+  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut, Sun, Moon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -415,6 +416,7 @@ function SettingsPage() {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 function Dashboard() {
+  const { theme, toggleTheme } = useTheme();
   const [appState, setAppState]             = useState('SETUP');
   const [collectionName, setCollectionName] = useState(null);
   const [uploadedFile, setUploadedFile]     = useState(null);
@@ -506,7 +508,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white font-sans flex">
+    <div className="min-h-screen w-full bg-[var(--bg-base)] text-[var(--text-primary)] font-sans flex">
 
       {/* ── Sidebar ── */}
       <Sidebar
@@ -521,8 +523,21 @@ function Dashboard() {
 
         {/* Ambient glow blobs */}
         <div className="fixed top-0 left-[250px] right-0 h-screen pointer-events-none overflow-hidden -z-0">
-          <div className="absolute top-[-20%] right-[10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[5%] w-[400px] h-[400px] rounded-full bg-indigo-600/[0.08] blur-[100px]" />
+          <div className="absolute top-[-20%] right-[10%] w-[500px] h-[500px] rounded-full glow-primary blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[5%] w-[400px] h-[400px] rounded-full glow-secondary blur-[100px]" />
+        </div>
+
+        {/* Theme toggle */}
+        <div className="fixed top-5 right-6 z-40">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            className="glass h-10 w-10 rounded-full flex items-center justify-center border border-[var(--border-glass)] hover:scale-[1.02] transition"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
         </div>
 
         <div className="relative z-10 px-8 py-8 max-w-5xl mx-auto">

@@ -12,25 +12,25 @@ import { saveAs } from 'file-saver';
 
 // ─── Bloom's badge styles (website only — dark glass theme) ──────────────────
 const BLOOMS_BADGE_STYLES = {
-    remember:   { label: 'Remember',   classes: 'bg-blue-500/10 text-blue-300 border-blue-500/20' },
+    remember: { label: 'Remember', classes: 'bg-blue-500/10 text-blue-300 border-blue-500/20' },
     understand: { label: 'Understand', classes: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20' },
-    apply:      { label: 'Apply',      classes: 'bg-green-500/10 text-green-300 border-green-500/20' },
-    analyze:    { label: 'Analyze',    classes: 'bg-purple-500/10 text-purple-300 border-purple-500/20' },
-    evaluate:   { label: 'Evaluate',   classes: 'bg-orange-500/10 text-orange-300 border-orange-500/20' },
-    create:     { label: 'Create',     classes: 'bg-pink-500/10 text-pink-300 border-pink-500/20' },
+    apply: { label: 'Apply', classes: 'bg-green-500/10 text-green-300 border-green-500/20' },
+    analyze: { label: 'Analyze', classes: 'bg-purple-500/10 text-purple-300 border-purple-500/20' },
+    evaluate: { label: 'Evaluate', classes: 'bg-orange-500/10 text-orange-300 border-orange-500/20' },
+    create: { label: 'Create', classes: 'bg-pink-500/10 text-pink-300 border-pink-500/20' },
 };
 
 // ─── Shared colour constants (in hex without #, for docx) ────────────────────
-const INDIGO   = '4F46E5';
+const INDIGO = '4F46E5';
 const INDIGO_L = 'EEF2FF'; // light indigo background
-const EMERALD  = '059669';
+const EMERALD = '059669';
 const EMERALD_L = 'D1FAE5';
-const BLUE_L   = 'EFF6FF';
-const BLUE_T   = '1D4ED8';
-const GRAY_D   = '1E293B';
-const GRAY_M   = '475569';
-const GRAY_L   = 'F1F5F9';
-const WHITE    = 'FFFFFF';
+const BLUE_L = 'EFF6FF';
+const BLUE_T = '1D4ED8';
+const GRAY_D = '1E293B';
+const GRAY_M = '475569';
+const GRAY_L = 'F1F5F9';
+const WHITE = 'FFFFFF';
 
 // ─── Helper: make a shaded paragraph (coloured background row) ───────────────
 function shadedPara(children, fillColor, spacing = { before: 80, after: 80 }) {
@@ -59,7 +59,7 @@ function hrPara() {
 }
 
 // ─── Build Question Paper .docx ───────────────────────────────────────────────
-async function downloadQuestionDocx(mcqs) {
+export async function downloadQuestionDocx(mcqs) {
     const OPT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     const children = [

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
 from .database import Base
 
@@ -18,3 +18,4 @@ class Assessment(Base):
     chapter_name = Column(String)
     bloom_factors = Column(JSONB) # Stores {remember: 5, apply: 2, etc.}
     content_json = Column(JSONB)  # Stores the massive output from Gemini
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

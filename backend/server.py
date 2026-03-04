@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from .client.rq_client import queue
 from .queue.chat import search_and_ask
 from .queue.doc_chunking import chunk
+from .routes.assessments import router as assessments_router
 
 # --- DATABASE IMPORTS ---
 from .database import engine, get_db
@@ -23,6 +24,9 @@ app = FastAPI()
 # Create Postgres tables if they don't exist
 models.Base.metadata.create_all(bind=engine)
 
+# Register routers
+app.include_router(assessments_router)
+
 # --- SECURITY & JWT CONFIGURATION ---
 SECRET_KEY = "super_secret_edumate_key"  # Keep this safe!
 ALGORITHM = "HS256"
@@ -30,6 +34,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours for normal login
 RESET_TOKEN_EXPIRE_MINUTES = 15     # 15 minutes to reset password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+
+# ── Shared auth dependency used by both server.py and routers ─────────────────
+def _get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 def get_password_hash(password: str) -> str:
     """
@@ -239,6 +257,34 @@ def get_result(
         return { "status" : "failed", "error" : str(job.exc_info) }
     
     return { "status" : job.get_status() }
+
+
+# ─── Save assessment to DB (called by frontend after job finishes) ─────────────
+from pydantic import BaseModel as _BaseModel
+from typing import Any as _Any
+
+class _SaveRequest(_BaseModel):
+    chapter_name: str
+    bloom_factors: dict
+    content_json: _Any
+
+@app.post('/api/assessments/save')
+def save_assessment(
+    body: _SaveRequest,
+    current_user: models.User = Depends(_get_current_user),
+    db: Session = Depends(get_db),
+):
+    new_assessment = models.Assessment(
+        user_id=current_user.id,
+        chapter_name=body.chapter_name,
+        bloom_factors=body.bloom_factors,
+        content_json=body.content_json,
+    )
+    db.add(new_assessment)
+    db.commit()
+    db.refresh(new_assessment)
+    return {"status": "saved", "id": new_assessment.id}
+
 
 
 # Serve frontend (built React preferred; fallback to legacy HTML)

@@ -9,42 +9,35 @@ import Signup from './components/Signup';
 import ForgotPassword from './components/ForgotPassword';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
+
 import { useTheme } from './context/ThemeContext';
-import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus } from './api';
+import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus, saveAssessment, fetchAssessmentHistory, fetchAssessmentDetail } from './api';
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
-  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut, Sun, Moon,
+  Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut, Sun, Moon, RefreshCw, Eye, Download, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Bloom's config ───────────────────────────────────────────────────────────
 const BLOOMS_LEVELS = [
-  { key: 'remember',   label: 'Remember'   },
+  { key: 'remember', label: 'Remember' },
   { key: 'understand', label: 'Understand' },
-  { key: 'apply',      label: 'Apply'      },
-  { key: 'analyze',    label: 'Analyze'    },
-  { key: 'evaluate',   label: 'Evaluate'   },
-  { key: 'create',     label: 'Create'     },
+  { key: 'apply', label: 'Apply' },
+  { key: 'analyze', label: 'Analyze' },
+  { key: 'evaluate', label: 'Evaluate' },
+  { key: 'create', label: 'Create' },
 ];
 const DEFAULT_BLOOMS = { remember: 5, understand: 3, apply: 4, analyze: 3, evaluate: 2, create: 3 };
-
-// ─── Mock history data ────────────────────────────────────────────────────────
-const MOCK_HISTORY = [
-  { name: 'Asynchronous Node.js',   date: 'Feb 17, 2026', questions: 20, status: 'Completed' },
-  { name: 'React Hooks Deep Dive',  date: 'Feb 15, 2026', questions: 15, status: 'Completed' },
-  { name: 'Database Normalization', date: 'Feb 12, 2026', questions: 10, status: 'Completed' },
-  { name: 'REST API Design',        date: 'Feb 10, 2026', questions: 12, status: 'Completed' },
-];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
   const { logout } = useAuth();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'history',   label: 'History',   icon: History },
-    { id: 'settings',  label: 'Settings',  icon: Settings },
-    { id: 'about',     label: 'About',     icon: Info },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'about', label: 'About', icon: Info },
   ];
 
   return (
@@ -105,7 +98,7 @@ function DashboardPage({
   appState, collectionName, uploadedFile, chapterName, setChapterName,
   bloomsLevels, totalQuestions, adjustLevel,
   isProcessingFile, handleFileUpload, handleGenerate,
-  assessmentData, resetApp, error, loadingMessage,
+  assessmentData, resetApp, handleRegenerate, error, loadingMessage,
 }) {
   const { user } = useAuth();
   const displayName = user?.name ? `Prof. ${user.name}` : 'Professor';
@@ -278,12 +271,24 @@ function DashboardPage({
           animate={{ opacity: 1 }}
           className="w-full"
         >
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
             <button
               onClick={resetApp}
               className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> New Assessment
+            </button>
+
+            <button
+              onClick={handleRegenerate}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl
+                         bg-gradient-to-r from-violet-600/80 to-indigo-600/80
+                         hover:from-violet-500 hover:to-indigo-500
+                         text-white text-sm font-semibold
+                         shadow-lg shadow-violet-900/30
+                         transition-all duration-200 active:scale-95"
+            >
+              <RefreshCw className="w-4 h-4" /> Regenerate Questions
             </button>
           </div>
           <AssessmentView assessmentData={assessmentData} />
@@ -316,57 +321,214 @@ function DashboardPage({
 }
 
 // ─── Page: History ────────────────────────────────────────────────────────────
-function HistoryPage() {
-  return (
-    <motion.div
-      key="history"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="mb-8">
-        <p className="text-white/40 text-sm font-medium mb-1">History</p>
-        <h1 className="text-3xl font-bold text-white">Recent Assessments</h1>
-      </div>
+function HistoryPage({ token }) {
+  const [history, setHistory] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
-      <div className="glass overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/[0.08]">
-              <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
-                <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5" /> Assessment Name</span>
-              </th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
-                <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> Date</span>
-              </th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
-                <span className="flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> Questions</span>
-              </th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {MOCK_HISTORY.map((row, i) => (
-              <tr
-                key={i}
-                className="border-b border-white/5 last:border-0 hover:bg-white/[0.03] transition-colors cursor-pointer"
-              >
-                <td className="px-6 py-4 font-medium text-white/80">{row.name}</td>
-                <td className="px-6 py-4 text-white/40">{row.date}</td>
-                <td className="px-6 py-4 text-white/40">{row.questions}</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                    {row.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </motion.div>
+  // Modal state
+  const [modalData, setModalData] = React.useState(null);  // { id, chapter_name, content }
+  const [modalLoading, setModalLoading] = React.useState(false);
+  const [downloadingId, setDownloadingId] = React.useState(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchAssessmentHistory(token);
+        if (!cancelled) setHistory(data);
+      } catch (e) {
+        if (!cancelled) setError('Failed to load history.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  const handleView = async (id) => {
+    setModalLoading(true);
+    setModalData(null);
+    try {
+      const detail = await fetchAssessmentDetail(token, id);
+      setModalData(detail);
+    } catch {
+      setError('Could not load assessment.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleDownload = async (id, chapterName) => {
+    setDownloadingId(id);
+    try {
+      const detail = await fetchAssessmentDetail(token, id);
+      if (detail?.content?.mcqs) {
+        // Dynamically import the docx builder from AssessmentView
+        const { downloadQuestionDocx, downloadAnswerKeyDocx } = await import('./components/AssessmentView');
+        await downloadQuestionDocx(detail.content.mcqs);
+      }
+    } catch (e) {
+      console.error('Download failed', e);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const formatDate = (iso) => {
+    try {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return iso; }
+  };
+
+  return (
+    <>
+      <motion.div
+        key="history"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -16 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="mb-8">
+          <p className="text-white/40 text-sm font-medium mb-1">History</p>
+          <h1 className="text-3xl font-bold text-white">Recent Assessments</h1>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="glass p-12 flex items-center justify-center gap-3 text-white/40">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Loading your assessment history…</span>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="glass p-8 flex items-center gap-3 text-red-400">
+            <AlertTriangle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && history.length === 0 && (
+          <div className="glass p-12 flex flex-col items-center justify-center text-center min-h-[260px]">
+            <History className="w-12 h-12 text-white/10 mb-4" />
+            <p className="text-white/30 text-sm">No assessments yet. Generate your first one!</p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && !error && history.length > 0 && (
+          <div className="glass overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.08]">
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
+                    <span className="flex items-center gap-2"><FileText className="w-3.5 h-3.5" /> Assessment Name</span>
+                  </th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
+                    <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> Date</span>
+                  </th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">
+                    <span className="flex items-center gap-2"><Hash className="w-3.5 h-3.5" /> Questions</span>
+                  </th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">Status</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-white/30 uppercase tracking-widest">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.03] transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium text-white/80">{row.chapter_name}</td>
+                    <td className="px-6 py-4 text-white/40">{formatDate(row.created_at)}</td>
+                    <td className="px-6 py-4 text-white/40">{row.questions}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleView(row.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 text-xs font-semibold transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View
+                        </button>
+                        <button
+                          onClick={() => handleDownload(row.id, row.chapter_name)}
+                          disabled={downloadingId === row.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-xs font-semibold transition-colors disabled:opacity-50"
+                        >
+                          {downloadingId === row.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Download className="w-3.5 h-3.5" />}
+                          Download
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ─── View Modal (slide-over) ────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {(modalLoading || modalData) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end"
+            onClick={(e) => { if (e.target === e.currentTarget) { setModalData(null); } }}
+          >
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="relative w-full max-w-3xl h-full bg-[#0d0d0f] border-l border-white/[0.08] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-black/80 backdrop-blur-xl border-b border-white/[0.08]">
+                <div>
+                  <p className="text-white/40 text-xs font-medium">Viewing Assessment</p>
+                  <h2 className="text-white font-semibold">{modalData?.chapter_name || '…'}</h2>
+                </div>
+                <button
+                  onClick={() => setModalData(null)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                {modalLoading && (
+                  <div className="flex items-center justify-center gap-3 text-white/40 min-h-[300px]">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Loading assessment…</span>
+                  </div>
+                )}
+                {modalData && (
+                  <AssessmentView assessmentData={modalData.content} />
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -419,16 +581,17 @@ function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const [appState, setAppState]             = useState('SETUP');
   const [collectionName, setCollectionName] = useState(null);
-  const [uploadedFile, setUploadedFile]     = useState(null);
-  const [chapterName, setChapterName]       = useState('');
-  const [bloomsLevels, setBloomsLevels]     = useState(DEFAULT_BLOOMS);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [chapterName, setChapterName] = useState('');
+  const [bloomsLevels, setBloomsLevels] = useState(DEFAULT_BLOOMS);
   const [assessmentData, setAssessmentData] = useState(null);
-  const [error, setError]                   = useState(null);
+  const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [activeNav, setActiveNav]           = useState('dashboard');
-  const [isGuideOpen, setIsGuideOpen]       = useState(false);
+  const [activeNav, setActiveNav] = useState('dashboard');
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
+  const { user, getToken } = useAuth();
   const totalQuestions = Object.values(bloomsLevels).reduce((a, b) => a + b, 0);
 
   const adjustLevel = (key, delta) =>
@@ -472,7 +635,7 @@ function Dashboard() {
       setAppState('GENERATING');
       setLoadingMessage('Crafting your assessment with AI…');
       const response = await generateAssessment(chapterName.trim(), collectionName, buildBloomsRequirements());
-      if (response.status === 'queued') pollGeneration(response.job_id);
+      if (response.status === 'queued') pollGeneration(response.job_id, chapterName.trim(), { ...bloomsLevels });
       else throw new Error('Generation failed to queue.');
     } catch (err) {
       setError(err.message || 'Failed to start generation.');
@@ -480,14 +643,48 @@ function Dashboard() {
     }
   };
 
-  const pollGeneration = (jobId) => {
+  const handleRegenerate = async () => {
+    if (!collectionName) return;
+    try {
+      setAssessmentData(null);
+      setAppState('GENERATING');
+      setLoadingMessage('Generating a fresh set of questions from the same document…');
+      const response = await generateAssessment(
+        chapterName.trim() || 'Assessment',
+        collectionName,
+        buildBloomsRequirements()
+      );
+      if (response.status === 'queued') pollGeneration(response.job_id, chapterName.trim() || 'Assessment', { ...bloomsLevels });
+      else throw new Error('Regeneration failed to queue.');
+    } catch (err) {
+      setError(err.message || 'Failed to start regeneration.');
+      setAppState('ERROR');
+    }
+  };
+
+  const pollGeneration = (jobId, chapterNameSnap, bloomsSnap) => {
     const iv = setInterval(async () => {
       try {
         const s = await pollJobStatus(jobId);
         if (s.status === 'finished') {
           clearInterval(iv);
-          if (s.result) { setAssessmentData(s.result); setAppState('RESULTS'); }
-          else { setError('Generation finished but returned no data.'); setAppState('ERROR'); }
+          if (s.result) {
+            setAssessmentData(s.result);
+            setAppState('RESULTS');
+            // ── Persist to DB in the background ──
+            try {
+              const token = getToken();
+              if (token) {
+                await saveAssessment(token, {
+                  chapter_name: chapterNameSnap,
+                  bloom_factors: bloomsSnap,
+                  content_json: s.result,
+                });
+              }
+            } catch (saveErr) {
+              console.warn('Could not save assessment to history:', saveErr);
+            }
+          } else { setError('Generation finished but returned no data.'); setAppState('ERROR'); }
         } else if (s.status === 'failed') {
           clearInterval(iv); setError(`Generation failed: ${s.error}`); setAppState('ERROR');
         }
@@ -559,13 +756,14 @@ function Dashboard() {
                 handleGenerate={handleGenerate}
                 assessmentData={assessmentData}
                 resetApp={resetApp}
+                handleRegenerate={handleRegenerate}
                 error={error}
                 loadingMessage={loadingMessage}
               />
             )}
 
             {activeNav === 'history' && (
-              <HistoryPage key="history-page" />
+              <HistoryPage key="history-page" token={getToken()} />
             )}
 
             {activeNav === 'bank' && (
@@ -597,8 +795,8 @@ function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login"           element={<Login />} />
-      <Route path="/signup"          element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected routes */}

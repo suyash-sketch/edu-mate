@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Any
 
 class UserCreate(BaseModel):
     name: str
@@ -23,3 +25,23 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+# ── Assessment schemas ────────────────────────────────────────────────────────
+
+class AssessmentHistoryItem(BaseModel):
+    id: int
+    chapter_name: str
+    questions: int
+    created_at: datetime
+    status: str = "completed"
+
+    class Config:
+        from_attributes = True
+
+class AssessmentDetail(BaseModel):
+    id: int
+    chapter_name: str
+    content: Any
+
+    class Config:
+        from_attributes = True

@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import FileUpload from './components/FileUpload';
-import AssessmentView from './components/AssessmentView';
-import BloomsGuideModal from './components/BloomsGuideModal';
-import AboutPage from './components/AboutPage';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import ForgotPassword from './components/ForgotPassword';
-import PrivateRoute from './components/PrivateRoute';
-import { useAuth } from './context/AuthContext';
 
+import {AboutPage, AssessmentView, FileUpload, BloomsGuideModal, Login, Signup, ForgotPassword, PrivateRoute} 
+from './components/index'
+
+
+import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
+
 import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus, saveAssessment, fetchAssessmentHistory, fetchAssessmentDetail } from './api';
+
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
   Plus, Minus, LayoutDashboard, Database, History,
   Settings, ChevronRight, FileText, Calendar, Hash, Lightbulb, Info, LogOut, Sun, Moon, RefreshCw, Eye, Download, X,
 } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Bloom's config ───────────────────────────────────────────────────────────

@@ -9,11 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from typing import List
 
 from .client.rq_client import queue
 from .queue.chat import search_and_ask
 from .queue.doc_chunking import chunk
-from .routes.assessments import router as assessments_router
+
 
 # --- DATABASE IMPORTS ---
 from .database import engine, get_db
@@ -24,8 +25,7 @@ app = FastAPI()
 # Create Postgres tables if they don't exist
 models.Base.metadata.create_all(bind=engine)
 
-# Register routers
-app.include_router(assessments_router)
+
 
 # --- SECURITY & JWT CONFIGURATION ---
 SECRET_KEY = "super_secret_edumate_key"  # Keep this safe!
@@ -284,6 +284,59 @@ def save_assessment(
     db.commit()
     db.refresh(new_assessment)
     return {"status": "saved", "id": new_assessment.id}
+
+
+# ─── Helper: count MCQs safely ────────────────────────────────────────────────
+def _count_questions(content_json) -> int:
+    try:
+        return len(content_json.get("mcqs", []))
+    except Exception:
+        return 0
+
+
+# ─── Get assessments History ─────────────
+@app.get("/api/assessments/history", response_model=List[schemas.AssessmentHistoryItem])
+def get_history(
+    current_user : models.User = Depends(_get_current_user),
+    db : Session = Depends(get_db)
+):
+    assessments = (
+        db.query(models.Assessment).filter(models.Assessment.user_id == current_user.id).order_by(models.Assessment.created_at.desc()).all()
+    )
+
+    return [
+        schemas.AssessmentHistoryItem(
+            id = a.id,
+            chapter_name=a.chapter_name,
+            questions=_count_questions(a.content_json),
+            created_at=a.created_at,
+            status="completed",
+        )
+        for a in assessments
+    ]
+
+
+@app.get('/api/assessments/{assessment_id}', response_model=schemas.AssessmentDetail)
+def get_assessment(
+    assessment_id : int,
+    current_user : models.User = Depends(_get_current_user),
+    db : Session = Depends(get_db),
+):
+    assessment = (
+        db.query(models.Assessment).filter(
+            models.Assessment.id == assessment_id,
+            models.Assessment.user_id == current_user.id,
+        ).first()
+    )
+
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    return schemas.AssessmentDetail(
+        id=assessment.id,
+        chapter_name=assessment.chapter_name,
+        content=assessment.content_json,
+    )
 
 
 

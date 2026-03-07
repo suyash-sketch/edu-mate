@@ -1,22 +1,101 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { BookOpen, Mail, ArrowLeft, Loader2, CheckCircle, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import AuthLayout from './AuthLayout';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
+  const [step, setStep] = useState(1); // 1 = enter email, 2 = new password
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    // TODO: replace with real password reset call
-    await new Promise(r => setTimeout(r, 1000));
-    setLoading(false);
-    setSent(true);
+
+    try {
+      const res = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Unable to start password reset. Please try again.');
+      }
+
+      if (!data.reset_token) {
+        // Backend hides whether the email exists; show a generic message.
+        throw new Error('If that email exists, a reset link has been sent. Please check your inbox.');
+      }
+
+      setResetToken(data.reset_token);
+      setStep(2);
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!password || !confirmPassword) {
+      setError('Please enter and confirm your new password.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, new_password: password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || 'Failed to reset password. Please try again.');
+      }
+
+      setCompleted(true);
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const title = completed
+    ? 'Password reset'
+    : step === 1
+      ? 'Reset your password'
+      : 'Choose a new password';
+
+  const subtitle = completed
+    ? 'Your password has been updated. You can now sign in with your new credentials.'
+    : step === 1
+      ? "Enter your account email and we'll help you reset your password."
+      : `Enter and confirm a new password for ${email || 'your account'}.`;
 
   return (
     <AuthLayout>
@@ -36,14 +115,21 @@ export default function ForgotPassword() {
 
         {/* Card */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
-          {!sent ? (
-            <>
-              <h1 className="text-2xl font-bold text-white mb-1">Reset your password</h1>
-              <p className="text-sm text-white/40 mb-7">
-                Enter your email and we'll send you a reset link.
-              </p>
+          <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
+          <p className="text-sm text-white/40 mb-5">
+            {subtitle}
+          </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-5">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          {!completed ? (
+            step === 1 ? (
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">Email</label>
                   <div className="relative">
@@ -71,10 +157,71 @@ export default function ForgotPassword() {
                              disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {loading ? 'Sending…' : 'Send Reset Link'}
+                  {loading ? 'Sending…' : 'Continue'}
                 </button>
               </form>
-            </>
+            ) : (
+              <form onSubmit={handleResetSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">New Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="glass-input pl-10 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="glass-input pl-10 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600
+                             hover:from-violet-500 hover:to-indigo-500
+                             text-white font-semibold text-sm
+                             flex items-center justify-center gap-2
+                             shadow-xl shadow-violet-900/40
+                             transition-all duration-200
+                             disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loading ? 'Resetting…' : 'Reset Password'}
+                </button>
+              </form>
+            )
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -84,9 +231,10 @@ export default function ForgotPassword() {
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
                 <CheckCircle className="w-7 h-7 text-emerald-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Check your inbox</h2>
+              <h2 className="text-xl font-bold text-white mb-2">Password updated</h2>
               <p className="text-sm text-white/40 leading-relaxed">
-                We've sent a password reset link to <span className="text-white/70 font-medium">{email}</span>.
+                Your password for <span className="text-white/70 font-medium">{email}</span> has been reset.
+                You can now sign in with your new credentials.
               </p>
             </motion.div>
           )}

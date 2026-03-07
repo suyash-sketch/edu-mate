@@ -144,10 +144,10 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     )
     
     # Because we don't have an email server yet, we will print the link to the terminal!
-    reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
+    reset_link = f"http://localhost:8000/reset-password?token={reset_token}"
     print(f"\n\n*** PASSWORD RESET LINK FOR {user.email} ***\n{reset_link}\n\n")
     
-    return {"message": "If the email exists, a reset link has been sent."}
+    return {"reset_token": reset_token}
 
 @app.post("/api/reset-password")
 def reset_password(request: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):

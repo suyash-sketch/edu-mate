@@ -2,24 +2,11 @@
 
 An AI-powered educational assessment platform that generates question papers from your study material using Bloom's Taxonomy.
 
-<video controls src="edumate_new_demo.mp4" title="EduMate Demo"></video>
+### Demo
+<video src="edumate_new_demo.mp4" controls width="100%"></video>
 
-<iframe
-  width="100%"
-  height="480"
-  src="https://www.youtube.com/embed/yZfxlsSSA7Q"
-  title="EduMate Demo"
-  frameBorder="0"
-  allowFullScreen
-/>
+[![EduMate Demo](https://img.youtube.com/vi/yZfxlsSSA7Q/0.jpg)](https://www.youtube.com/watch?v=yZfxlsSSA7Q)
 
-<iframe
-  title="EduMate Demo"
-  src="https://drive.google.com/file/d/15aJj1MArma66ZGX47ZlF7p5vnCeO-vyW/preview"
-  width="100%"
-  height="480"
-  allow="autoplay"
-></iframe>
 
 ## Documentation
 

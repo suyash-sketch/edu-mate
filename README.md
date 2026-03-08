@@ -4,6 +4,22 @@ An AI-powered educational assessment platform that generates question papers fro
 
 <video controls src="edumate_new_demo.mp4" title="EduMate Demo"></video>
 
+<iframe
+  width="100%"
+  height="480"
+  src="https://www.youtube.com/embed/yZfxlsSSA7Q"
+  title="EduMate Demo"
+  frameBorder="0"
+  allowFullScreen
+/>
+
+<iframe
+  title="EduMate Demo"
+  src="https://drive.google.com/file/d/15aJj1MArma66ZGX47ZlF7p5vnCeO-vyW/preview"
+  width="100%"
+  height="480"
+  allow="autoplay"
+></iframe>
 
 ## Documentation
 

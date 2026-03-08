@@ -7,8 +7,6 @@ An AI-powered educational assessment platform that generates question papers fro
 
 [![EduMate Demo](https://img.youtube.com/vi/yZfxlsSSA7Q/0.jpg)](https://www.youtube.com/watch?v=yZfxlsSSA7Q)
 
-[![EduMate Demo](https://img.youtube.com/vi/yZfxlsSSA7Q/0.jpg)](https://drive.google.com/file/d/15aJj1MArma66ZGX47ZlF7p5vnCeO-vyW/preview)
-
 ## Documentation
 
 For detailed documentation, visit: [EduMate Docs](https://suyash-sketch-edu-mate-68.mintlify.app/introduction)

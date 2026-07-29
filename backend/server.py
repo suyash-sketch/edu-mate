@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 import jwt
 import bcrypt
-from fastapi import FastAPI, File, Query, UploadFile, Depends, HTTPException, status
+from fastapi import FastAPI, File, Query, UploadFile, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm

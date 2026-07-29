@@ -10,7 +10,6 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-
 open_ai_client = OpenAI(
     api_key=GEMINI_API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",
@@ -28,8 +27,8 @@ ollama_client = Client(
 # vector embeddings (must match the model used during chunking/indexing)
 def _embedding_model():
     return OllamaEmbeddings(
-        # model='nomic-embed-text',
-        model='qwen3-embedding:0.6b',
+        model='nomic-embed-text',
+        # model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434',
     )
 

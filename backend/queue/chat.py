@@ -50,28 +50,7 @@ class SingleMCQ(BaseModel):
     
 class OutputFormat(BaseModel):
     mcqs : List[SingleMCQ]
-    
-    
 
-# def prompt_modelling(context):
-    
-#     SYSTEM_PROMPT = f"""
-#     You are a helpful AI assistant who gives multiple choice questions with four options based on available context retrieved from a PDF file along with page_contents and page number, The multiple choice questions should be based on the concept of bloom's taxonomy.
-    
-#     The blooms taxonomy is a hierarchical classification of different levels of cognitive skills that educators set for students. The levels are: Remembering, Understanding, Applying, Analyzing, Evaluating, and Creating. Each level represents a different type of thinking skill that students can develop.
-    
-#     Each multiple choice question should have one correct answer and three distractors. The correct answer should be based on the content of the PDF file and the distractors should be plausible but incorrect answers. The question should be clear and concise, and the answer options should be mutually exclusive and collectively exhaustive.
-    
-#     The question should also include an explanation of the correct answer, which should be based on the content of the PDF file.
-    
-#     Questions should be according to the following requirements: {requirements}
-
-#     # You should only give the mcqs based on the following context 
-#     Context:
-#     {context}
-#     """
-
-#     return SYSTEM_PROMPT
 
 def prompt_modelling(context, blooms_requirements: str):
     SYSTEM_PROMPT = f"""

@@ -2,7 +2,7 @@ import os
 import uuid
 import hashlib
 from datetime import datetime, timedelta, timezone
-import jwt
+from jose import jwt
 import bcrypt
 from fastapi import FastAPI, File, Query, UploadFile, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from .client.rq_client import queue
-from .queue.chat import search_and_ask
-from .queue.doc_chunking import chunk
+from .task_queue.chat import search_and_ask
+from .task_queue.doc_chunking import chunk
 
 
 # --- DATABASE IMPORTS ---

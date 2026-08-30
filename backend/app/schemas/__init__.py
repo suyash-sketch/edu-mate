@@ -8,9 +8,5 @@ from app.schemas.auth import (
 from app.schemas.assessment import (
     AssessmentDetail,
     AssessmentHistoryItem,
-)
-from app.schemas.assessment import (
-    AssessmentDetail,
-    AssessmentHistoryItem,
     SaveAssessmentRequest,
 )

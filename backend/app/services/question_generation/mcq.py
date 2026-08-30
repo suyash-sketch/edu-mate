@@ -3,8 +3,8 @@ from openai import OpenAI
 from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaEmbeddings
 from ollama import Client
-from pydantic import BaseModel
-from typing import List, Optional
+from app.schemas.question_generation.mcq import MCQOutput
+from app.services.prompts import build_mcq_prompt
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -39,40 +39,6 @@ def _vector_db(collection_name: str):
         embedding=_embedding_model(),
     )
 
-class SingleMCQ(BaseModel):
-    question_no : str
-    bloom_level : str  # e.g. "remember", "understand", "apply", "analyze", "evaluate", "create"
-    question : str
-    answer_options : List[str]
-    correct_answer : str
-    explaination : Optional[str]
-    
-class OutputFormat(BaseModel):
-    mcqs : List[SingleMCQ]
-
-
-def prompt_modelling(context, blooms_requirements: str):
-    SYSTEM_PROMPT = f"""
-        You are a Subject Matter Expert designing a professional, standalone exam. 
-        You have been provided with "Educational Content" and "Admin Metadata" for verification.
-
-        ### THE RULES FOR YOUR OUTPUT:
-        1. **STRICT BLIND EXAM MODE**: Write the questions as if the student has NO access to any documents. 
-           - DO NOT mention "Page Numbers," "Lessons," "Sections," or "the PDF."
-           - BAD: "According to the provided text on page 4, what is..."
-           - GOOD: "What is the primary characteristic of..."
-        2. **INTERNAL VERIFICATION ONLY**: Use the "Admin Metadata" only to ensure your answer is grounded in the correct chapter. DO NOT repeat this metadata in the question, the options, or the explanation.
-        3. **EXPLANATION FORMAT**: Write the explanation as a factual teaching note. 
-           - BAD: "This is found on page 10 of nodejs.pdf."
-           - GOOD: "Promises are used to handle asynchronous operations more cleanly than callbacks."
-        4. **BLOOM'S TAXONOMY**: Generate questions according to these counts: {blooms_requirements}.
-           For each question, set the `bloom_level` field to exactly one of: remember, understand, apply, analyze, evaluate, create — matching the cognitive level of that question.
-
-        ### PROVIDED DATA (FOR YOUR EYES ONLY):
-        {context}
-    """
-    return SYSTEM_PROMPT  
-
 def search_and_ask(user_query, collection_name: str, blooms_requirements: str = "5 remember, 3 understand, 4 apply, 3 analyze, 2 evaluate, 3 create", top_k = 5):
 
     vector_db = _vector_db(collection_name=collection_name)
@@ -97,7 +63,7 @@ def search_and_ask(user_query, collection_name: str, blooms_requirements: str = 
         
     
     print(f'\n\n{context}\n\n')
-    SYSTEM_PROMPT = prompt_modelling(context, blooms_requirements)
+    SYSTEM_PROMPT = build_mcq_prompt(context, blooms_requirements)
 
     # response = ollama_client.chat(
     #     model='llama3.2:1b',
@@ -118,7 +84,7 @@ def search_and_ask(user_query, collection_name: str, blooms_requirements: str = 
 
     response = open_ai_client.chat.completions.parse(
         model='gemini-2.5-flash-lite',
-        response_format= OutputFormat,
+        response_format= MCQOutput,
         messages=[
         {"role":"system", "content" : SYSTEM_PROMPT},
         {"role":"user", "content":user_query},

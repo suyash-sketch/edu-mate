@@ -10,6 +10,7 @@ export default defineConfig({
       '/chunking': 'http://127.0.0.1:8000',
       '/chat': 'http://127.0.0.1:8000',
       '/job_status': 'http://127.0.0.1:8000',
+      '/generate': 'http://127.0.0.1:8000',
     }
   }
 })

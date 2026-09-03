@@ -34,10 +34,11 @@ def save_assessment(
 
 # ─── Helper: count MCQs safely ────────────────────────────────────────────────
 def _count_questions(content_json) -> int:
-    try:
-        return len(content_json.get("mcqs", []))
-    except Exception:
+    if not isinstance(content_json, dict):
         return 0
+    return(
+        len(content_json.get('mcqs', [])) + len(content_json.get("subjecive_questions", []))
+    )
 
 
 # ─── Get assessments History ─────────────

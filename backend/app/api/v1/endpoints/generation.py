@@ -3,6 +3,8 @@ import uuid
 
 from fastapi import APIRouter, File, Query, UploadFile
 
+from app.schemas.question_generation.request import GenerationRequest
+from app.services.question_generator import generate_assessment
 from app.core.config import UPLOADS_DIR
 from app.core.rq_client import queue
 from app.services.document_indexing import chunk
@@ -65,6 +67,24 @@ def chat(
     job = queue.enqueue(search_and_ask, query, collection_name, blooms_requirements, job_timeout = 600)
     return { "status" : "queued", "job_id" : job.id }
 
+@router.post("/generate")
+def generate_assessment_job(body: GenerationRequest):
+    job = queue.enqueue(
+        generate_assessment,
+        user_query=body.query,
+        collection_name=body.collection_name,
+        mcq_count=body.mcq_count,
+        subjective_count=body.subjective_count,
+        blooms=body.blooms.as_dict(),
+        job_timeout=900,
+    )
+
+    return {
+        "status": "queued",
+        "job_id": job.id,
+        "mcq_count": body.mcq_count,
+        "subjective_count": body.subjective_count,
+    }
 
 @router.get('/job_status')
 def get_result(

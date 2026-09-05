@@ -26,6 +26,10 @@ open_ai_client = OpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",
 )
 
+# open_ai_client = OpenAI(
+#     base_url="http://127.0.0.1:8080/v1",
+#     api_key="sk-local"
+# )
 # vector embeddings (must match the model used during chunking/indexing)
 def _embedding_model():
     return OllamaEmbeddings(
@@ -136,6 +140,7 @@ def generate_structured_response(
 ):
     response = open_ai_client.chat.completions.parse(
         model="gemini-2.5-flash-lite",
+        # model='gemma-4-E4B-it-qat-UD-Q4_K_XL',
         response_format=response_schema,
         messages=[
             {"role": "system", "content": system_prompt},

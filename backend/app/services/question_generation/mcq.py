@@ -10,15 +10,15 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-open_ai_client = OpenAI(
-    api_key=GEMINI_API_KEY,
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai",
-)
-
 # open_ai_client = OpenAI(
-#     base_url="http://localhost:11434/v1",
-#     api_key="ollama"
+#     api_key=GEMINI_API_KEY,
+#     base_url="https://generativelanguage.googleapis.com/v1beta/openai",
 # )
+
+open_ai_client = OpenAI(
+    base_url="http://127.0.0.1:8080/v1",
+    api_key="sk-local"
+)
 
 ollama_client = Client(
     host='http://localhost:11434'
@@ -27,8 +27,8 @@ ollama_client = Client(
 # vector embeddings (must match the model used during chunking/indexing)
 def _embedding_model():
     return OllamaEmbeddings(
-        model='nomic-embed-text',
-        # model='qwen3-embedding:0.6b',
+        # model='nomic-embed-text',
+        model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434',
     )
 
@@ -117,7 +117,8 @@ def search_and_ask(user_query, collection_name: str, blooms_requirements: str = 
     # print(response.message.content)
 
     response = open_ai_client.chat.completions.parse(
-        model='gemini-2.5-flash-lite',
+        # model='gemini-2.5-flash-lite',
+        model='gemma-4-E4B-it-qat-UD-Q4_K_XL',
         response_format= OutputFormat,
         messages=[
         {"role":"system", "content" : SYSTEM_PROMPT},

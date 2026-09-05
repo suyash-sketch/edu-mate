@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import {AboutPage, AssessmentView, FileUpload, BloomsGuideModal, Login, Signup, ForgotPassword, PrivateRoute} 
-from './components/index'
+import { AboutPage, AssessmentView, FileUpload, BloomsGuideModal, Login, Signup, ForgotPassword, PrivateRoute }
+  from './components/index'
 
 
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 
-import { uploadFile, pollChunkingStatus, generateAssessment, pollJobStatus, saveAssessment, fetchAssessmentHistory, fetchAssessmentDetail } from './api';
+import { uploadFile, pollChunkingStatus, generateMixedAssessment, pollJobStatus, saveAssessment, fetchAssessmentHistory, fetchAssessmentDetail } from './api';
 
 import {
   Loader2, Sparkles, BookOpen, AlertTriangle, ArrowLeft,
@@ -28,6 +28,7 @@ const BLOOMS_LEVELS = [
   { key: 'create', label: 'Create' },
 ];
 const DEFAULT_BLOOMS = { remember: 5, understand: 3, apply: 4, analyze: 3, evaluate: 2, create: 3 };
+const DEFAULT_MCQ_COUNT = Object.values(DEFAULT_BLOOMS).reduce((total, count) => total + count, 0);
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
@@ -96,6 +97,7 @@ function Sidebar({ activeNav, setActiveNav, onReset, onOpenGuide }) {
 function DashboardPage({
   appState, collectionName, uploadedFile, chapterName, setChapterName,
   bloomsLevels, totalQuestions, adjustLevel,
+  mcqCount, subjectiveCount, bloomTotal, countsMatch, adjustQuestionCount,
   isProcessingFile, handleFileUpload, handleGenerate,
   assessmentData, resetApp, handleRegenerate, error, loadingMessage,
 }) {
@@ -148,17 +150,103 @@ function DashboardPage({
               )}
             </div>
 
-            {/* Step 2 — Bloom's */}
+            {/* Step 2 — Question Types */}
             <div className="mb-6">
               <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">
-                Step 2 · Bloom's Taxonomy Factors
+                Step 2 · Question Types
+              </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  {
+                    key: 'mcq',
+                    label: 'Multiple Choice Questions',
+                    description: 'Questions with answer options',
+                    count: mcqCount,
+                  },
+                  {
+                    key: 'subjective',
+                    label: 'Subjective Questions',
+                    description: 'Descriptive questions with model answers',
+                    count: subjectiveCount,
+                  },
+                ].map(type => (
+                  <div
+                    key={type.key}
+                    className="glass-inner rounded-xl border border-violet-500/20 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white/85">
+                          {type.label}
+                        </p>
+                        <p className="text-xs text-white/40 mt-1">
+                          {type.description}
+                        </p>
+                      </div>
+
+                      <div className="inline-flex items-stretch rounded-lg overflow-hidden border border-violet-500/30">
+                        <button
+                          type="button"
+                          onClick={() => adjustQuestionCount(type.key, -1)}
+                          className="px-2.5 flex items-center justify-center bg-violet-500/20 hover:bg-violet-500/45 text-white/70 hover:text-white transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+
+                        <span className="min-w-[38px] px-3 py-2 flex items-center justify-center bg-violet-500/35 text-sm font-bold text-white">
+                          {type.count}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => adjustQuestionCount(type.key, 1)}
+                          className="px-2.5 flex items-center justify-center bg-violet-500/20 hover:bg-violet-500/45 text-white/70 hover:text-white transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                <span className="text-white/45">
+                  Requested questions:
+                  <span className="ml-1 font-bold text-white">{totalQuestions}</span>
+                </span>
+
+                <span className="text-white/45">
+                  Bloom's total:
+                  <span className="ml-1 font-bold text-white">{bloomTotal}</span>
+                </span>
+
+                <span
+                  className={
+                    countsMatch
+                      ? 'text-emerald-400'
+                      : 'text-amber-400'
+                  }
+                >
+                  {countsMatch
+                    ? '✓ Counts match — ready to generate'
+                    : '⚠ Question-type total must match Bloom’s total'}
+                </span>
+              </div>
+            </div>
+
+            {/* Step 3 — Bloom's */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">
+                Step 3 · Bloom's Taxonomy Factors
               </label>
 
               {/* Total questions box — compact */}
               <div className="mb-4 flex items-center gap-2">
-                <span className="text-xs text-white/40">Total Questions:</span>
+                <span className="text-xs text-white/40">Bloom's Total:</span>
                 <div className="glass-inner px-3 py-1 rounded-lg flex items-center justify-center min-w-[40px]">
-                  <span className="text-white font-bold text-base">{totalQuestions}</span>
+                  <span className="text-white font-bold text-base">{bloomTotal}</span>
                 </div>
               </div>
 
@@ -218,7 +306,7 @@ function DashboardPage({
             {/* Generate button */}
             <button
               onClick={handleGenerate}
-              disabled={!chapterName.trim() || !collectionName || isProcessingFile || totalQuestions === 0}
+              disabled={!chapterName.trim() || !collectionName || isProcessingFile || !countsMatch}
               className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600
                          hover:from-violet-500 hover:to-indigo-500
                          text-white font-semibold text-base
@@ -233,8 +321,8 @@ function DashboardPage({
                 ? 'Waiting for file processing…'
                 : !collectionName
                   ? 'Upload a file to start'
-                  : totalQuestions === 0
-                    ? 'Set at least 1 question'
+                  : !countsMatch
+                    ? 'Match question counts with Bloom totals'
                     : 'Generate AI Assessment'}
             </button>
           </div>
@@ -578,11 +666,13 @@ function SettingsPage() {
 // ─── Main App ─────────────────────────────────────────────────────────────────
 function Dashboard() {
   const { theme, toggleTheme } = useTheme();
-  const [appState, setAppState]             = useState('SETUP');
+  const [appState, setAppState] = useState('SETUP');
   const [collectionName, setCollectionName] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [chapterName, setChapterName] = useState('');
   const [bloomsLevels, setBloomsLevels] = useState(DEFAULT_BLOOMS);
+  const [mcqCount, setMcqCount] = useState(DEFAULT_MCQ_COUNT);
+  const [subjectiveCount, setSubjectiveCount] = useState(0);
   const [assessmentData, setAssessmentData] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -591,15 +681,21 @@ function Dashboard() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   const { user, getToken } = useAuth();
-  const totalQuestions = Object.values(bloomsLevels).reduce((a, b) => a + b, 0);
+  const totalQuestions = mcqCount + subjectiveCount;
+  const bloomTotal = Object.values(bloomsLevels)
+    .reduce((total, count) => total + count, 0);
+  const countsMatch =
+    totalQuestions > 0 && totalQuestions === bloomTotal;
 
   const adjustLevel = (key, delta) =>
     setBloomsLevels(prev => ({ ...prev, [key]: Math.max(0, prev[key] + delta) }));
-
-  const buildBloomsRequirements = () =>
-    BLOOMS_LEVELS.filter(l => bloomsLevels[l.key] > 0)
-      .map(l => `${bloomsLevels[l.key]} ${l.key}`)
-      .join(', ');
+  const adjustQuestionCount = (type, delta) => {
+    if (type === 'mcq') {
+      setMcqCount(previous => Math.max(0, previous + delta));
+    } else {
+      setSubjectiveCount(previous => Math.max(0, previous + delta));
+    }
+  };
 
   const handleFileUpload = async (file) => {
     try {
@@ -629,13 +725,41 @@ function Dashboard() {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    if (!chapterName.trim() || !collectionName || isProcessingFile || totalQuestions === 0) return;
+
+    if (
+      !chapterName.trim() ||
+      !collectionName ||
+      isProcessingFile ||
+      !countsMatch
+    ) return;
+
     try {
       setAppState('GENERATING');
       setLoadingMessage('Crafting your assessment with AI…');
-      const response = await generateAssessment(chapterName.trim(), collectionName, buildBloomsRequirements());
-      if (response.status === 'queued') pollGeneration(response.job_id, chapterName.trim(), { ...bloomsLevels });
-      else throw new Error('Generation failed to queue.');
+
+      const generationSettings = {
+        blooms: { ...bloomsLevels },
+        mcq_count: mcqCount,
+        subjective_count: subjectiveCount,
+      };
+
+      const response = await generateMixedAssessment({
+        query: chapterName.trim(),
+        collectionName,
+        mcqCount,
+        subjectiveCount,
+        blooms: { ...bloomsLevels },
+      });
+
+      if (response.status === 'queued') {
+        pollGeneration(
+          response.job_id,
+          chapterName.trim(),
+          generationSettings,
+        );
+      } else {
+        throw new Error('Generation failed to queue.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to start generation.');
       setAppState('ERROR');
@@ -643,25 +767,47 @@ function Dashboard() {
   };
 
   const handleRegenerate = async () => {
-    if (!collectionName) return;
+    if (!collectionName || !countsMatch) return;
+
     try {
       setAssessmentData(null);
       setAppState('GENERATING');
-      setLoadingMessage('Generating a fresh set of questions from the same document…');
-      const response = await generateAssessment(
-        chapterName.trim() || 'Assessment',
-        collectionName,
-        buildBloomsRequirements()
+      setLoadingMessage(
+        'Generating a fresh set of questions from the same document…',
       );
-      if (response.status === 'queued') pollGeneration(response.job_id, chapterName.trim() || 'Assessment', { ...bloomsLevels });
-      else throw new Error('Regeneration failed to queue.');
+
+      const query = chapterName.trim() || 'Assessment';
+
+      const generationSettings = {
+        blooms: { ...bloomsLevels },
+        mcq_count: mcqCount,
+        subjective_count: subjectiveCount,
+      };
+
+      const response = await generateMixedAssessment({
+        query,
+        collectionName,
+        mcqCount,
+        subjectiveCount,
+        blooms: { ...bloomsLevels },
+      });
+
+      if (response.status === 'queued') {
+        pollGeneration(
+          response.job_id,
+          query,
+          generationSettings,
+        );
+      } else {
+        throw new Error('Generation failed to queue.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to start regeneration.');
       setAppState('ERROR');
     }
   };
 
-  const pollGeneration = (jobId, chapterNameSnap, bloomsSnap) => {
+  const pollGeneration = (jobId, chapterNameSnap, generationSettingsSnap) => {
     const iv = setInterval(async () => {
       try {
         const s = await pollJobStatus(jobId);
@@ -676,7 +822,7 @@ function Dashboard() {
               if (token) {
                 await saveAssessment(token, {
                   chapter_name: chapterNameSnap,
-                  bloom_factors: bloomsSnap,
+                  bloom_factors: generationSettingsSnap,
                   content_json: s.result,
                 });
               }
@@ -701,6 +847,8 @@ function Dashboard() {
     setError(null);
     setIsProcessingFile(false);
     setActiveNav('dashboard');
+    setMcqCount(DEFAULT_MCQ_COUNT);
+    setSubjectiveCount(0);
   };
 
   return (
@@ -750,6 +898,11 @@ function Dashboard() {
                 bloomsLevels={bloomsLevels}
                 totalQuestions={totalQuestions}
                 adjustLevel={adjustLevel}
+                mcqCount={mcqCount}
+                subjectiveCount={subjectiveCount}
+                bloomTotal={bloomTotal}
+                countsMatch={countsMatch}
+                adjustQuestionCount={adjustQuestionCount}
                 isProcessingFile={isProcessingFile}
                 handleFileUpload={handleFileUpload}
                 handleGenerate={handleGenerate}

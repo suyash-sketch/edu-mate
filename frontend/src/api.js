@@ -36,6 +36,27 @@ export const generateAssessment = async (query, collectionName, bloomsRequiremen
     return response.data;
 };
 
+export const generateMixedAssessment = async ({
+    query,
+    collectionName,
+    mcqCount,
+    subjectiveCount,
+    blooms,
+}) => {
+    const response = await axios.post(
+        `${API_BASE_URL}/generate`,
+        {
+            query,
+            collection_name: collectionName,
+            mcq_count: mcqCount,
+            subjective_count: subjectiveCount,
+            blooms,
+        },
+    );
+
+    return response.data;
+};
+
 export const pollJobStatus = async (jobId) => {
     const response = await axios.get(`${API_BASE_URL}/job_status`, {
         params: { job_id: jobId },

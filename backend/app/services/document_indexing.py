@@ -1,14 +1,20 @@
+import os
 import sys
 import glob
 from pathlib import Path
 import argparse
 
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 def find_pdfs(inputs):
     if isinstance(inputs, (str, Path)):
@@ -87,6 +93,12 @@ def chunk(doc_path, collection_name: str):
         # model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434'
     )
+
+    # embedding_model = OpenAIEmbeddings(
+    #     model='gemini-embedding-2',
+    #     api_key = GEMINI_API_KEY,
+    #     base_url='https://generativelanguage.googleapis.com/v1beta/openai/',
+    # )
 
     vector_store = QdrantVectorStore.from_documents(
         documents=chunks,

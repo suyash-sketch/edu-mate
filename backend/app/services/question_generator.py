@@ -2,6 +2,7 @@ import os
 from openai import OpenAI
 from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from app.schemas.question_generation.mcq import MCQOutput
@@ -33,6 +34,13 @@ def _embedding_model():
         # model='qwen3-embedding:0.6b',
         base_url='http://localhost:11434',
     )
+
+# def _embedding_model():
+#     return OpenAIEmbeddings(
+#         model='gemini-embedding-2',
+#         api_key = GEMINI_API_KEY,
+#         base_url='https://generativelanguage.googleapis.com/v1beta/openai/',
+#     )
 
 def _vector_db(collection_name: str):
     return QdrantVectorStore.from_existing_collection(

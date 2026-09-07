@@ -671,8 +671,8 @@ function Dashboard() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [chapterName, setChapterName] = useState('');
   const [bloomsLevels, setBloomsLevels] = useState(DEFAULT_BLOOMS);
-  const [mcqCount, setMcqCount] = useState(DEFAULT_MCQ_COUNT);
-  const [subjectiveCount, setSubjectiveCount] = useState(0);
+  const [mcqCount, setMcqCount] = useState(10);
+  const [subjectiveCount, setSubjectiveCount] = useState(10);
   const [assessmentData, setAssessmentData] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');

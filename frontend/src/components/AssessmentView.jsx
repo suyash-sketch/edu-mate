@@ -476,17 +476,12 @@ const AssessmentView = ({ assessmentData }) => {
         <div className="w-full pb-20">
 
             {/* ── Sticky header ── */}
-            <div className="sticky top-0 z-20 backdrop-blur-xl bg-black/60 border-b border-white/[0.08] px-2 py-3 mb-8 flex justify-between items-center gap-2 flex-wrap rounded-2xl">
-                <h2 className="text-base font-semibold text-white/80 ml-2 hidden sm:block">
-                    Assessment Result
-                </h2>
             <div className="sticky top-0 z-20 backdrop-blur-xl bg-black/60 border-b border-white/[0.08] px-3 py-2.5 mb-8 flex justify-between items-center gap-3 rounded-2xl overflow-x-auto">
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <h2 className="text-base font-semibold text-white/80 ml-2 hidden sm:block whitespace-nowrap">
                         Assessment Result
                     </h2>
 
-                {mcqs.length > 0 && subjectiveQuestions.length > 0 && (
                     {mcqs.length > 0 && subjectiveQuestions.length > 0 && (
                         <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
                             <button
@@ -517,71 +512,33 @@ const AssessmentView = ({ assessmentData }) => {
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* View toggle */}
                     <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
                         <button
-                            onClick={() => setActiveQuestionType('mcq')}
                             onClick={() => setViewMode('question')}
                             className={clsx(
-                                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                activeQuestionType === 'mcq'
-                                    ? 'bg-violet-600/80 text-white'
                                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200',
                                 viewMode === 'question'
                                     ? 'bg-violet-600/80 text-white shadow-sm'
                                     : 'text-white/40 hover:text-white/70'
                             )}
                         >
-                            MCQs ({mcqs.length})
                             <FileText size={15} />
                             <span>Question Paper</span>
                         </button>
 
                         <button
-                            onClick={() => setActiveQuestionType('subjective')}
                             onClick={() => setViewMode('answer')}
                             className={clsx(
-                                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                                activeQuestionType === 'subjective'
-                                    ? 'bg-violet-600/80 text-white'
                                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200',
                                 viewMode === 'answer'
                                     ? 'bg-emerald-600/80 text-white shadow-sm'
                                     : 'text-white/40 hover:text-white/70'
                             )}
                         >
-                            Subjective ({subjectiveQuestions.length})
                             <Key size={15} />
                             <span>Answer Key</span>
                         </button>
                     </div>
-                )}
-                {/* View toggle */}
-                <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
-                    <button
-                        onClick={() => setViewMode('question')}
-                        className={clsx(
-                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                            viewMode === 'question'
-                                ? 'bg-violet-600/80 text-white shadow-sm'
-                                : 'text-white/40 hover:text-white/70'
-                        )}
-                    >
-                        <FileText size={15} />
-                        <span>Question Paper</span>
-                    </button>
-                    <button
-                        onClick={() => setViewMode('answer')}
-                        className={clsx(
-                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                            viewMode === 'answer'
-                                ? 'bg-emerald-600/80 text-white shadow-sm'
-                                : 'text-white/40 hover:text-white/70'
-                        )}
-                    >
-                        <Key size={15} />
-                        <span>Answer Key</span>
-                    </button>
 
                     {viewMode === 'question' ? (
                         <button
@@ -603,26 +560,6 @@ const AssessmentView = ({ assessmentData }) => {
                         </button>
                     )}
                 </div>
-
-                {viewMode === 'question' ? (
-                    <button
-                        onClick={() => handleDownload(downloadQuestionDocx)}
-                        disabled={downloading}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-sm font-semibold shadow-lg shadow-violet-900/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <Download size={15} />
-                        {downloading ? 'Generating…' : 'Download Question Paper (.docx)'}
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => handleDownload(downloadAnswerKeyDocx)}
-                        disabled={downloading}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-sm font-semibold shadow-lg shadow-emerald-900/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <Download size={15} />
-                        {downloading ? 'Generating…' : 'Download Answer Key (.docx)'}
-                    </button>
-                )}
             </div>
 
             {/* ── Questions list ── */}

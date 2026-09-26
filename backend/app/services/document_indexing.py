@@ -6,8 +6,8 @@ import argparse
 from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
+from langchain_openai import OpenAIEmbeddings
 
 
 def find_pdfs(inputs):
@@ -77,11 +77,17 @@ def chunk(doc_path, collection_name: str):
     chunks = text_splitter.split_documents(documents=docs)
 
 
-    # Vector Embeddings
-    embedding_model = OllamaEmbeddings(
-        model='nomic-embed-text',
-        # model='qwen3-embedding:0.6b',
-        base_url='http://localhost:11434'
+    # # Vector Embeddings
+    # embedding_model = OllamaEmbeddings(
+    #     model='nomic-embed-text',
+    #     # model='qwen3-embedding:0.6b',
+        # base_url='http://localhost:11434'
+    # )
+
+    embedding_model = OpenAIEmbeddings(
+        model='Qwen3-Embedding-0.6B-GGUF:Q8_0',
+        base_url='http://localhost:8081/v1',
+        openai_api_key='sk-local',
     )
 
     vector_store = QdrantVectorStore.from_documents(

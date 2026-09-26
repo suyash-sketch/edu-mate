@@ -1,13 +1,12 @@
 import os
 from openai import OpenAI
 from langchain_qdrant import QdrantVectorStore
-from langchain_ollama import OllamaEmbeddings
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from app.schemas.question_generation.mcq import MCQOutput
 from app.schemas.question_generation.subjective import SubjectiveOutput
 from app.services.prompts import build_mcq_prompt, build_subjective_prompt
-
+from langchain_openai import OpenAIEmbeddings
 load_dotenv()
 
 BLOOM_LEVELS = (
@@ -30,12 +29,20 @@ open_ai_client = OpenAI(
 #     base_url="http://127.0.0.1:8080/v1",
 #     api_key="sk-local"
 # )
+
 # vector embeddings (must match the model used during chunking/indexing)
+# def _embedding_model():
+#     return OllamaEmbeddings(
+#         model='nomic-embed-text',
+#         # model='qwen3-embedding:0.6b',
+#         base_url='http://localhost:11434',
+#     )
+
 def _embedding_model():
-    return OllamaEmbeddings(
-        model='nomic-embed-text',
-        # model='qwen3-embedding:0.6b',
-        base_url='http://localhost:11434',
+    return OpenAIEmbeddings(
+        model='Qwen3-Embedding-0.6B-GGUF:Q8_0',
+        base_url='http://localhost:8081/v1',
+        openai_api_key='sk-local',
     )
 
 def _vector_db(collection_name: str):

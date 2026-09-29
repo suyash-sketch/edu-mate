@@ -45,6 +45,13 @@ def _embedding_model():
         openai_api_key='sk-local',
     )
 
+# def _embedding_model():
+#     return OpenAIEmbeddings(
+#         model='gemini-embedding-2',
+#         api_key = GEMINI_API_KEY,
+#         base_url='https://generativelanguage.googleapis.com/v1beta/openai/',
+#     )
+
 def _vector_db(collection_name: str):
     return QdrantVectorStore.from_existing_collection(
         url='http://localhost:6333',

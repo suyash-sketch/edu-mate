@@ -450,10 +450,13 @@ function HistoryPage({ token }) {
     setDownloadingId(id);
     try {
       const detail = await fetchAssessmentDetail(token, id);
-      if (detail?.content?.mcqs) {
+      if (detail?.content) {
         // Dynamically import the docx builder from AssessmentView
-        const { downloadQuestionDocx, downloadAnswerKeyDocx } = await import('./components/AssessmentView');
-        await downloadQuestionDocx(detail.content.mcqs);
+        const { downloadQuestionDocx } = await import('./components/AssessmentView');
+        await downloadQuestionDocx(
+          detail.content.mcqs || [],
+          detail.content.subjective_questions || []
+        );
       }
     } catch (e) {
       console.error('Download failed', e);
@@ -671,8 +674,8 @@ function Dashboard() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [chapterName, setChapterName] = useState('');
   const [bloomsLevels, setBloomsLevels] = useState(DEFAULT_BLOOMS);
-  const [mcqCount, setMcqCount] = useState(DEFAULT_MCQ_COUNT);
-  const [subjectiveCount, setSubjectiveCount] = useState(0);
+  const [mcqCount, setMcqCount] = useState(10);
+  const [subjectiveCount, setSubjectiveCount] = useState(10);
   const [assessmentData, setAssessmentData] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState('');

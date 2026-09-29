@@ -36,9 +36,8 @@ def save_assessment(
 def _count_questions(content_json) -> int:
     if not isinstance(content_json, dict):
         return 0
-    return(
-        len(content_json.get('mcqs', [])) + len(content_json.get("subjecive_questions", []))
-    )
+    subjective = content_json.get("subjective_questions") or content_json.get("subjecive_questions", [])
+    return len(content_json.get('mcqs', [])) + len(subjective)
 
 
 # ─── Get assessments History ─────────────

@@ -85,8 +85,8 @@ llama serve \
   -hf Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 \
   --embeddings \
   --pooling last \
-  --device none \
-  -ngl 0 \
+  --device CUDA0 \
+  -ngl 20 \
   -c 4096 \
   -np 1 \
   -t 6 \

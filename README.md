@@ -98,19 +98,16 @@ llama serve \
 # run the gemma-4 reasoning model
 
 cd ~/miniproject/llama-cpp-turboquant
-
 ./build/bin/llama-server \
   -m "/run/media/suyashk13/New Volume/gemma-unified/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf" \
   --device CUDA0 \
-  -ngl all \
+  -ngl 50 \
   -fa on \
-  -c 4096 \
+  -c 32786 \
   -np 1 \
   --cache-type-k q8_0 \
   --cache-type-v turbo4 \
-  --reasoning off \
   --jinja \
   --host 127.0.0.1 \
   --port 8080
-
 ```
